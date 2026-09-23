@@ -9,6 +9,9 @@
         <field name="description">Access to equipment and maintenance requests.</field>
     </record>
 
+    <!-- USER group (Technician). implied_ids (4, ref(...)) = "link": every technician
+         is also an internal user (base.group_user). Access rights per group are in
+         ir.model.access.csv (id, name, model, group, read, write, create, delete). -->
     <record id="equipment_maintenance_mgmt_group_technician" model="res.groups">
         <field name="name">Technician</field>
         <field name="sequence">10</field>
@@ -17,6 +20,8 @@
         <field name="comment">Can view equipment, create maintenance requests and work on the requests assigned to them.</field>
     </record>
 
+    <!-- MANAGER group: implies Technician, so a manager has all technician rights plus
+         more. user_ids (Odoo 19 name, formerly users): admin and root become managers. -->
     <record id="equipment_maintenance_mgmt_group_manager" model="res.groups">
         <field name="name">Manager</field>
         <field name="sequence">20</field>

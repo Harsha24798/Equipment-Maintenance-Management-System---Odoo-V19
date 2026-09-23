@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- RECORD RULES (ir.rule): restrict WHICH records a user can see / modify.
+         noupdate="1": created once, not overwritten on module upgrade (admin changes kept).
+         A rule WITHOUT groups is global: it applies to everybody and is combined with AND.
+         company_ids = companies selected by the user (multi-company isolation). -->
     <data noupdate="1">
         <record id="equipment_maintenance_equipment_rule_company" model="ir.rule">
             <field name="name">Equipment: multi-company</field>
             <field name="model_id" ref="model_equipment_maintenance_equipment"/>
             <field name="domain_force">[('company_id', 'in', company_ids)]</field>
         </record>
+        <!-- company_ids + [False]: categories without company are shared by all companies -->
         <record id="equipment_maintenance_category_rule_company" model="ir.rule">
             <field name="name">Equipment Category: multi-company</field>
             <field name="model_id" ref="model_equipment_maintenance_category"/>

@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- QWEB TEMPLATE of one work order (o = the printed request).
+         web.external_layout adds the company header and footer.
+         t-set: define a variable; with_context(lang=...): print in the user language. -->
     <template id="report_maintenance_request_document">
         <t t-call="web.external_layout">
             <t t-set="o" t-value="o.with_context(lang=o.env.user.lang)"/>
             <div class="page">
+                <!-- t-field: display a field with its formatting (dates, monetary, selection label) -->
                 <h2>
                     Maintenance Work Order <span t-field="o.name"/>
                 </h2>
@@ -41,14 +45,17 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- t-foreach / t-as: loop over the activity lines, one table row per line -->
                         <tr t-foreach="o.work_activity_ids" t-as="line">
                             <td><span t-field="line.date"/></td>
                             <td><span t-field="line.name"/></td>
                             <td><span t-field="line.technician_id"/></td>
+                            <!-- t-options widget float_time: hours shown as HH:MM -->
                             <td class="text-end"><span t-field="line.hours_spent" t-options="{'widget': 'float_time'}"/></td>
                             <td class="text-end"><span t-field="line.labour_rate"/></td>
                             <td class="text-end"><span t-field="line.cost"/></td>
                         </tr>
+                        <!-- t-if: row displayed only when there is no activity -->
                         <tr t-if="not o.work_activity_ids">
                             <td colspan="6" class="text-muted">No activity recorded.</td>
                         </tr>
@@ -110,6 +117,8 @@
         </t>
     </template>
 
+    <!-- Main template called by the report action: web.html_container provides the
+         HTML page; docs = the records selected for printing -->
     <template id="report_maintenance_request">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">

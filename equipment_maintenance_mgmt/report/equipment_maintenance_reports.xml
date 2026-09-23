@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- PDF REPORT ACTIONS (ir.actions.report).
+         report_type qweb-pdf: HTML template rendered to PDF by wkhtmltopdf;
+         report_name = XML ID of the QWeb template; print_report_name = file name
+         (Python expression, object = the printed record); binding_model_id +
+         binding_type report: adds the report to the Print menu of the model. -->
     <record id="equipment_maintenance_request_action_report" model="ir.actions.report">
         <field name="name">Maintenance Work Order</field>
         <field name="model">equipment.maintenance.request</field>
@@ -22,6 +27,7 @@
         <field name="binding_type">report</field>
     </record>
 
+    <!-- group_ids: only maintenance managers can print the equipment history -->
     <record id="equipment_maintenance_equipment_action_report_history" model="ir.actions.report">
         <field name="name">Equipment Maintenance History</field>
         <field name="model">equipment.maintenance.equipment</field>

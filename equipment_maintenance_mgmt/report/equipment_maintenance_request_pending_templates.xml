@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- PENDING MAINTENANCE SUMMARY: one PDF for all selected requests.
+         Only open requests are kept (filtered), sorted by technician, priority, date. -->
     <template id="report_pending_maintenance">
         <t t-call="web.html_container">
             <t t-set="pending" t-value="docs.filtered(lambda r: r.state in ('new', 'assigned', 'in_progress')).sorted(key=lambda r: (r.technician_id.name or '', -int(r.priority), r.scheduled_date or r.request_date))"/>
+            <!-- company: used by web.external_layout for the header (company of the requests) -->
             <t t-set="company" t-value="docs[:1].company_id or res_company"/>
             <t t-call="web.external_layout">
                 <div class="page">
@@ -24,6 +27,7 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- t-att-class: dynamic class attribute, overdue requests printed in red -->
                             <tr t-foreach="pending" t-as="req"
                                 t-att-class="'text-danger' if req.is_overdue else ''">
                                 <td><t t-if="req.technician_id"><span t-field="req.technician_id"/></t><t t-else=""><em>Unassigned</em></t></td>

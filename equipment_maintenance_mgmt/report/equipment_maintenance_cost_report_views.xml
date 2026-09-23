@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- ================= Maintenance Cost Analysis ================= -->
+    <!-- MAINTENANCE COST ANALYSIS views on the SQL-view model.
+         PIVOT: type="row" / type="col" = default grouping (category x month),
+         type="measure" = summed values, interval="month" groups dates by month. -->
     <record id="equipment_maintenance_cost_report_view_pivot" model="ir.ui.view">
         <field name="name">equipment.maintenance.cost.report.view.pivot</field>
         <field name="model">equipment.maintenance.cost.report</field>
@@ -15,6 +18,7 @@
         </field>
     </record>
 
+    <!-- GRAPH: stacked bar chart of the total cost per month and category -->
     <record id="equipment_maintenance_cost_report_view_graph" model="ir.ui.view">
         <field name="name">equipment.maintenance.cost.report.view.graph</field>
         <field name="model">equipment.maintenance.cost.report</field>
@@ -27,6 +31,7 @@
         </field>
     </record>
 
+    <!-- LIST: detailed rows; create/edit/delete disabled (read-only report) -->
     <record id="equipment_maintenance_cost_report_view_list" model="ir.ui.view">
         <field name="name">equipment.maintenance.cost.report.view.list</field>
         <field name="model">equipment.maintenance.cost.report</field>
@@ -48,6 +53,7 @@
         </field>
     </record>
 
+    <!-- SEARCH: filters and all available group-bys of the analysis -->
     <record id="equipment_maintenance_cost_report_view_search" model="ir.ui.view">
         <field name="name">equipment.maintenance.cost.report.view.search</field>
         <field name="model">equipment.maintenance.cost.report</field>
@@ -73,6 +79,7 @@
         </field>
     </record>
 
+    <!-- Action of Reporting > Maintenance Cost Analysis (pivot first, cancelled excluded) -->
     <record id="equipment_maintenance_cost_report_action" model="ir.actions.act_window">
         <field name="name">Maintenance Cost Analysis</field>
         <field name="res_model">equipment.maintenance.cost.report</field>
@@ -85,6 +92,7 @@
     </record>
 
     <!-- ================= Equipment Maintenance History ================= -->
+    <!-- EQUIPMENT MAINTENANCE HISTORY: completed requests grouped by equipment -->
     <record id="equipment_maintenance_request_action_history" model="ir.actions.act_window">
         <field name="name">Equipment Maintenance History</field>
         <field name="res_model">equipment.maintenance.request</field>

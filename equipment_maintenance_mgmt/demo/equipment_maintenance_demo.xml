@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- ====================== Users & employees ====================== -->
+    <!-- DEMO DATA (loaded only in demo databases).
+         group_ids eval Command.set([...]): replace the groups of the user with this list -->
     <record id="user_technician_kasun" model="res.users">
         <field name="name">Kasun Perera</field>
         <field name="login">kasun</field>
@@ -23,6 +25,7 @@
         <field name="group_ids" eval="[Command.set([ref('equipment_maintenance_mgmt_group_manager')])]"/>
     </record>
 
+    <!-- Employees linked to the users (user_id); hourly_cost gives the default labour rate -->
     <record id="employee_kasun" model="hr.employee">
         <field name="name">Kasun Perera</field>
         <field name="user_id" ref="user_technician_kasun"/>
@@ -41,6 +44,7 @@
         <field name="job_title">Maintenance Manager</field>
     </record>
 
+    <!-- A record id of another module (base.main_company) UPDATES that existing record -->
     <record id="base.main_company" model="res.company">
         <field name="maintenance_labour_rate">1200.0</field>
     </record>
@@ -49,6 +53,7 @@
     <record id="location_colombo_plant" model="equipment.maintenance.location">
         <field name="name">Colombo Plant</field>
     </record>
+    <!-- parent_id ref="...": link to another record by its XML ID -->
     <record id="location_workshop_a" model="equipment.maintenance.location">
         <field name="name">Workshop A</field>
         <field name="parent_id" ref="location_colombo_plant"/>
@@ -99,6 +104,8 @@
     </record>
 
     <!-- ====================== Equipment ====================== -->
+    <!-- Dates are relative to today (DateTime.today() + relativedelta) so the demo
+         always shows valid / expiring / expired warranties -->
     <record id="equipment_cnc_lathe" model="equipment.maintenance.equipment">
         <field name="name">CNC Lathe Machine</field>
         <field name="serial_no">CNC-2023-0001</field>
@@ -191,6 +198,8 @@
         <field name="scheduled_date" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d')"/>
         <field name="description"><![CDATA[<p>Oil leak on main cylinder, pressure drops under load.</p>]]></field>
     </record>
+    <!-- <function>: call a Python method during loading; the demo goes through the
+         real workflow (start, add lines, complete) instead of forcing the state -->
     <function model="equipment.maintenance.request" name="action_start"
               eval="[[ref('request_press_in_progress')]]"/>
     <record id="activity_press_1" model="equipment.maintenance.activity">

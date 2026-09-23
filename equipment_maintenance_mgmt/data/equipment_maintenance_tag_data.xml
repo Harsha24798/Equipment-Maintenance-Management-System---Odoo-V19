@@ -2,6 +2,7 @@
 <odoo>
     <!-- Default request tags. noupdate: users may rename or archive them. -->
     <data noupdate="1">
+        <!-- Default tags for the Many2many field request.tag_ids (color = palette index) -->
         <record id="tag_electrical" model="equipment.maintenance.tag">
             <field name="name">Electrical</field>
             <field name="color">3</field>

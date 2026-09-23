@@ -2,6 +2,8 @@
 <odoo>
     <!-- Default equipment categories. noupdate: users may rename or archive them. -->
     <data noupdate="1">
+        <!-- Each <record> creates one row: id = XML ID (reusable with ref), model = target
+             model, <field name="..."> = field values; eval="False" evaluates Python -->
         <record id="category_machinery" model="equipment.maintenance.category">
             <field name="name">Machinery</field>
             <field name="code">MCH</field>

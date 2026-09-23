@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Record rules of requests, their lines and the cost report.
+         Global company rules first (AND with every other rule). -->
     <data noupdate="1">
         <record id="equipment_maintenance_request_rule_company" model="ir.rule">
             <field name="name">Maintenance Request: multi-company</field>
@@ -21,12 +23,16 @@
             <field name="model_id" ref="model_equipment_maintenance_cost_report"/>
             <field name="domain_force">[('company_id', 'in', company_ids)]</field>
         </record>
+        <!-- USER-BASED RESTRICTION: a technician only sees the requests assigned to them
+             (technician_id = user) OR reported by them (create_uid = user). '|' = OR.
+             domain_force = the condition; groups = to whom the rule applies. -->
         <record id="equipment_maintenance_request_rule_technician" model="ir.rule">
             <field name="name">Maintenance Request: technician own requests</field>
             <field name="model_id" ref="model_equipment_maintenance_request"/>
             <field name="domain_force">['|', ('technician_id', '=', user.id), ('create_uid', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('equipment_maintenance_mgmt_group_technician'))]"/>
         </record>
+        <!-- Lines follow the visibility of their request (request_id.technician_id ...) -->
         <record id="equipment_maintenance_activity_rule_technician" model="ir.rule">
             <field name="name">Maintenance Activity: technician own requests</field>
             <field name="model_id" ref="model_equipment_maintenance_activity"/>
@@ -39,6 +45,8 @@
             <field name="domain_force">['|', ('request_id.technician_id', '=', user.id), ('request_id.create_uid', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('equipment_maintenance_mgmt_group_technician'))]"/>
         </record>
+        <!-- MANAGER FULL ACCESS: [(1, '=', 1)] is always true. Rules of different groups
+             are combined with OR, so this rule overrides the technician restriction. -->
         <record id="equipment_maintenance_request_rule_manager" model="ir.rule">
             <field name="name">Maintenance Request: manager all requests</field>
             <field name="model_id" ref="model_equipment_maintenance_request"/>

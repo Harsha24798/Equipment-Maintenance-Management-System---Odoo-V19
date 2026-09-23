@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- EQUIPMENT MAINTENANCE HISTORY PDF (o = the equipment).
+         requests = all its requests sorted by date (sorted with a key function). -->
     <template id="report_equipment_history_document">
         <t t-call="web.external_layout">
             <t t-set="o" t-value="o.with_context(lang=o.env.user.lang)"/>
@@ -36,6 +38,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- One row per request, then a detail row with its activities and spare parts -->
                         <t t-foreach="requests" t-as="req">
                             <tr>
                                 <td><span t-field="req.name"/></td>
@@ -67,6 +70,7 @@
                     </tbody>
                 </table>
 
+                <!-- Totals of completed requests; t-out prints an expression, t-options formats it -->
                 <t t-set="done" t-value="requests.filtered(lambda r: r.state == 'completed')"/>
                 <div class="row justify-content-end">
                     <div class="col-6">
@@ -96,6 +100,7 @@
         </t>
     </template>
 
+    <!-- Main template: loops on docs (the selected equipment) -->
     <template id="report_equipment_history">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
+        <!-- SEQUENCE used by create() through next_by_code(code).
+             prefix MR/%(year)s/ + padding 5 gives MR/2026/00001, MR/2026/00002 ...
+             company_id False: one sequence shared by all companies. -->
         <record id="sequence_equipment_maintenance_request" model="ir.sequence">
             <field name="name">Maintenance Request</field>
             <field name="code">equipment.maintenance.request</field>
