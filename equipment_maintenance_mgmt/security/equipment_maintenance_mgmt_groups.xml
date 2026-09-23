@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Odoo 19: groups are organised under a privilege (res.groups.privilege)
+         which is displayed as a single selection on the user form. -->
+    <record id="res_groups_privilege_equipment_maintenance" model="res.groups.privilege">
+        <field name="name">Equipment Maintenance</field>
+        <field name="sequence">40</field>
+        <field name="category_id" ref="base.module_category_supply_chain"/>
+        <field name="description">Access to equipment and maintenance requests.</field>
+    </record>
+
+    <record id="equipment_maintenance_mgmt_group_technician" model="res.groups">
+        <field name="name">Technician</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="res_groups_privilege_equipment_maintenance"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Can view equipment, create maintenance requests and work on the requests assigned to them.</field>
+    </record>
+
+    <record id="equipment_maintenance_mgmt_group_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="sequence">20</field>
+        <field name="privilege_id" ref="res_groups_privilege_equipment_maintenance"/>
+        <field name="implied_ids" eval="[(4, ref('equipment_maintenance_mgmt_group_technician'))]"/>
+        <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        <field name="comment">Full access to equipment, all maintenance requests, configuration and reports.</field>
+    </record>
+</odoo>

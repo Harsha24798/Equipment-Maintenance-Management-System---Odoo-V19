@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="equipment_maintenance_equipment_rule_company" model="ir.rule">
+            <field name="name">Equipment: multi-company</field>
+            <field name="model_id" ref="model_equipment_maintenance_equipment"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+        <record id="equipment_maintenance_category_rule_company" model="ir.rule">
+            <field name="name">Equipment Category: multi-company</field>
+            <field name="model_id" ref="model_equipment_maintenance_category"/>
+            <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+        </record>
+        <record id="equipment_maintenance_location_rule_company" model="ir.rule">
+            <field name="name">Equipment Location: multi-company</field>
+            <field name="model_id" ref="model_equipment_maintenance_location"/>
+            <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+        </record>
+    </data>
+</odoo>
