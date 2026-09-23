@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="equipment_maintenance_menu_root"
+              name="Equipment Maintenance"
+              web_icon="equipment_maintenance_mgmt,static/description/icon.png"
+              groups="equipment_maintenance_mgmt_group_technician"
+              sequence="45"/>
+
+    <!-- Operations -->
+    <menuitem id="equipment_maintenance_menu_operations" name="Maintenance"
+              parent="equipment_maintenance_menu_root" sequence="10"/>
+    <menuitem id="equipment_maintenance_request_menu_my" name="My Requests"
+              parent="equipment_maintenance_menu_operations" action="equipment_maintenance_request_action_my" sequence="5"/>
+    <menuitem id="equipment_maintenance_request_menu" name="All Requests"
+              parent="equipment_maintenance_menu_operations" action="equipment_maintenance_request_action" sequence="10"/>
+    <menuitem id="equipment_maintenance_activity_menu" name="Technician Activities"
+              parent="equipment_maintenance_menu_operations" action="equipment_maintenance_activity_action" sequence="20"/>
+    <menuitem id="equipment_maintenance_spare_part_menu" name="Spare Parts Consumption"
+              parent="equipment_maintenance_menu_operations" action="equipment_maintenance_spare_part_action" sequence="30"/>
+
+    <!-- Equipment -->
+    <menuitem id="equipment_maintenance_equipment_menu" name="Equipment"
+              parent="equipment_maintenance_menu_root" action="equipment_maintenance_equipment_action" sequence="20"/>
+
+    <!-- Reporting (managers) -->
+    <menuitem id="equipment_maintenance_menu_reporting" name="Reporting"
+              parent="equipment_maintenance_menu_root" sequence="80"
+              groups="equipment_maintenance_mgmt_group_manager"/>
+    <menuitem id="equipment_maintenance_cost_report_menu" name="Maintenance Cost Analysis"
+              parent="equipment_maintenance_menu_reporting" action="equipment_maintenance_cost_report_action" sequence="10"/>
+    <menuitem id="equipment_maintenance_request_menu_pending" name="Pending Maintenance"
+              parent="equipment_maintenance_menu_reporting" action="equipment_maintenance_request_action_pending" sequence="20"/>
+    <menuitem id="equipment_maintenance_request_menu_history" name="Equipment Maintenance History"
+              parent="equipment_maintenance_menu_reporting" action="equipment_maintenance_request_action_history" sequence="30"/>
+
+    <!-- Configuration (managers) -->
+    <menuitem id="equipment_maintenance_menu_config" name="Configuration"
+              parent="equipment_maintenance_menu_root" sequence="100"
+              groups="equipment_maintenance_mgmt_group_manager"/>
+    <menuitem id="equipment_maintenance_menu_settings" name="Settings"
+              parent="equipment_maintenance_menu_config" action="res_config_settings_action_equipment_maintenance"
+              sequence="1" groups="base.group_system"/>
+    <menuitem id="equipment_maintenance_category_menu" name="Equipment Categories"
+              parent="equipment_maintenance_menu_config" action="equipment_maintenance_category_action" sequence="10"/>
+    <menuitem id="equipment_maintenance_location_menu" name="Locations"
+              parent="equipment_maintenance_menu_config" action="equipment_maintenance_location_action" sequence="20"/>
+    <menuitem id="equipment_maintenance_tag_menu" name="Tags"
+              parent="equipment_maintenance_menu_config" action="equipment_maintenance_tag_action" sequence="30"/>
+</odoo>
