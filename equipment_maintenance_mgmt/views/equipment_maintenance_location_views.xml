@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="equipment_maintenance_location_view_list" model="ir.ui.view">
+        <field name="name">equipment.maintenance.location.view.list</field>
+        <field name="model">equipment.maintenance.location</field>
+        <field name="arch" type="xml">
+            <list string="Locations">
+                <field name="complete_name"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_location_view_form" model="ir.ui.view">
+        <field name="name">equipment.maintenance.location.view.form</field>
+        <field name="model">equipment.maintenance.location</field>
+        <field name="arch" type="xml">
+            <form string="Location">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Workshop A"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="parent_id"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Address or notes..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_location_view_search" model="ir.ui.view">
+        <field name="name">equipment.maintenance.location.view.search</field>
+        <field name="model">equipment.maintenance.location</field>
+        <field name="arch" type="xml">
+            <search string="Search Locations">
+                <field name="complete_name"/>
+                <field name="parent_id"/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_location_action" model="ir.actions.act_window">
+        <field name="name">Locations</field>
+        <field name="res_model">equipment.maintenance.location</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a location</p>
+            <p>Locations tell technicians where the equipment is installed.</p>
+        </field>
+    </record>
+</odoo>

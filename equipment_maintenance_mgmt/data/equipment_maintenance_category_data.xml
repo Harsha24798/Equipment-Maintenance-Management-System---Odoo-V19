@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default equipment categories. noupdate: users may rename or archive them. -->
+    <data noupdate="1">
+        <record id="category_machinery" model="equipment.maintenance.category">
+            <field name="name">Machinery</field>
+            <field name="code">MCH</field>
+            <field name="color">1</field>
+            <field name="company_id" eval="False"/>
+        </record>
+        <record id="category_it" model="equipment.maintenance.category">
+            <field name="name">IT Equipment</field>
+            <field name="code">IT</field>
+            <field name="color">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+        <record id="category_vehicle" model="equipment.maintenance.category">
+            <field name="name">Vehicles</field>
+            <field name="code">VEH</field>
+            <field name="color">2</field>
+            <field name="company_id" eval="False"/>
+        </record>
+        <record id="category_facility" model="equipment.maintenance.category">
+            <field name="name">Facility &amp; HVAC</field>
+            <field name="code">FAC</field>
+            <field name="color">10</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

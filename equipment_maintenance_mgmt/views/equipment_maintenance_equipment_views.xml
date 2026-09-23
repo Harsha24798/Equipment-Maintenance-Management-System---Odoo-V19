@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="equipment_maintenance_equipment_view_list" model="ir.ui.view">
+        <field name="name">equipment.maintenance.equipment.view.list</field>
+        <field name="model">equipment.maintenance.equipment</field>
+        <field name="arch" type="xml">
+            <list string="Equipment" sample="1"
+                  decoration-danger="warranty_state == 'expired'"
+                  decoration-warning="warranty_state == 'expiring'">
+                <field name="name"/>
+                <field name="serial_no"/>
+                <field name="category_id"/>
+                <field name="location_id" optional="show"/>
+                <field name="employee_id" widget="many2one_avatar_employee" optional="show"/>
+                <field name="purchase_date" optional="hide"/>
+                <field name="warranty_expiry_date" optional="show"/>
+                <field name="warranty_state" widget="badge"
+                       decoration-success="warranty_state == 'valid'"
+                       decoration-warning="warranty_state == 'expiring'"
+                       decoration-danger="warranty_state == 'expired'"
+                       optional="show"/>
+                <field name="last_maintenance_date" optional="hide"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="total_maintenance_cost" sum="Total" optional="show"
+                       groups="equipment_maintenance_mgmt.equipment_maintenance_mgmt_group_manager"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_equipment_view_form" model="ir.ui.view">
+        <field name="name">equipment.maintenance.equipment.view.form</field>
+        <field name="model">equipment.maintenance.equipment</field>
+        <field name="arch" type="xml">
+            <form string="Equipment">
+                <header>
+                    <button name="action_create_request" type="object" string="New Request"
+                            class="oe_highlight" invisible="not active"/>
+                    <button name="action_print_history" type="object" string="Print History"
+                            groups="equipment_maintenance_mgmt.equipment_maintenance_mgmt_group_manager"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_requests" type="object"
+                                class="oe_stat_button" icon="fa-wrench">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="open_request_count"/> / <field name="request_count"/>
+                                </span>
+                                <span class="o_stat_text">Open / All Requests</span>
+                            </div>
+                        </button>
+                        <button name="action_view_requests" type="object"
+                                class="oe_stat_button" icon="fa-money"
+                                groups="equipment_maintenance_mgmt.equipment_maintenance_mgmt_group_manager">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="total_maintenance_cost" widget="monetary"/>
+                                </span>
+                                <span class="o_stat_text">Maintenance Cost</span>
+                            </div>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="image_1920" widget="image" class="oe_avatar"
+                           options="{'preview_image': 'image_128'}"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. CNC Lathe Machine"/></h1>
+                        <field name="warranty_state" widget="badge"
+                               decoration-success="warranty_state == 'valid'"
+                               decoration-warning="warranty_state == 'expiring'"
+                               decoration-danger="warranty_state == 'expired'"
+                               invisible="warranty_state == 'none'"/>
+                    </div>
+                    <group>
+                        <group string="Identification">
+                            <field name="serial_no"/>
+                            <field name="category_id" options="{'no_create': True}"/>
+                            <field name="model"/>
+                            <field name="manufacturer"/>
+                        </group>
+                        <group string="Assignment">
+                            <field name="location_id"/>
+                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group string="Purchase &amp; Warranty">
+                            <field name="purchase_date"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="purchase_cost"/>
+                            <field name="warranty_expiry_date"/>
+                            <field name="warranty_days_left"
+                                   invisible="warranty_state not in ('valid', 'expiring')"/>
+                        </group>
+                        <group string="Maintenance">
+                            <field name="last_maintenance_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Maintenance History" name="history">
+                            <field name="request_ids" readonly="1">
+                                <list decoration-muted="state == 'cancelled'"
+                                      decoration-success="state == 'completed'">
+                                    <field name="name"/>
+                                    <field name="request_date"/>
+                                    <field name="request_type"/>
+                                    <field name="technician_id" widget="many2one_avatar_user"/>
+                                    <field name="priority" widget="priority"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="total_cost" sum="Total"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note" placeholder="Technical notes, operating instructions..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_equipment_view_kanban" model="ir.ui.view">
+        <field name="name">equipment.maintenance.equipment.view.kanban</field>
+        <field name="model">equipment.maintenance.equipment</field>
+        <field name="arch" type="xml">
+            <kanban highlight_color="color" sample="1">
+                <templates>
+                    <t t-name="menu">
+                        <t t-if="widget.editable"><a role="menuitem" type="open" class="dropdown-item">Edit</a></t>
+                        <field name="color" widget="kanban_color_picker"/>
+                    </t>
+                    <t t-name="card" class="flex-row">
+                        <aside class="o_kanban_aside_full">
+                            <field name="image_128" widget="image" options="{'img_class': 'object-fit-contain'}"
+                                   alt="Equipment"/>
+                        </aside>
+                        <main class="ms-2">
+                            <field name="name" class="fw-bold fs-5"/>
+                            <span class="text-muted">SN: <field name="serial_no"/></span>
+                            <field name="category_id"/>
+                            <field name="location_id" class="text-muted"/>
+                            <field name="warranty_state" widget="badge"
+                                   decoration-success="warranty_state == 'valid'"
+                                   decoration-warning="warranty_state == 'expiring'"
+                                   decoration-danger="warranty_state == 'expired'"
+                                   invisible="warranty_state == 'none'"/>
+                            <footer>
+                                <div class="badge text-bg-danger" t-if="record.open_request_count.raw_value">
+                                    <field name="open_request_count"/> open
+                                </div>
+                                <field name="employee_id" widget="many2one_avatar_employee" class="ms-auto"/>
+                            </footer>
+                        </main>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_equipment_view_search" model="ir.ui.view">
+        <field name="name">equipment.maintenance.equipment.view.search</field>
+        <field name="model">equipment.maintenance.equipment</field>
+        <field name="arch" type="xml">
+            <search string="Search Equipment">
+                <field name="name" filter_domain="['|', ('name', 'ilike', self), ('serial_no', 'ilike', self)]"/>
+                <field name="serial_no"/>
+                <field name="category_id"/>
+                <field name="location_id"/>
+                <field name="employee_id"/>
+                <filter name="under_warranty" string="Under Warranty" domain="[('warranty_state', '=', 'valid')]"/>
+                <filter name="warranty_expiring" string="Warranty Expiring Soon" domain="[('warranty_state', '=', 'expiring')]"/>
+                <filter name="warranty_expired" string="Warranty Expired" domain="[('warranty_state', '=', 'expired')]"/>
+                <separator/>
+                <filter name="has_open_requests" string="Under Maintenance"
+                        domain="[('request_ids.state', 'in', ('new', 'assigned', 'in_progress'))]"/>
+                <separator/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_by_category" string="Category" context="{'group_by': 'category_id'}"/>
+                    <filter name="group_by_location" string="Location" context="{'group_by': 'location_id'}"/>
+                    <filter name="group_by_employee" string="Responsible" context="{'group_by': 'employee_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_equipment_action" model="ir.actions.act_window">
+        <field name="name">Equipment</field>
+        <field name="res_model">equipment.maintenance.equipment</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Register your first equipment</p>
+            <p>Track serial numbers, warranty, location and the responsible employee of every asset.</p>
+        </field>
+    </record>
+</odoo>
