@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- MENUS (loaded last: they reference actions defined in the other files).
+         Root menu = the app on the home screen: web_icon = module,path of the icon;
+         groups: only technicians (and managers, who imply technicians) see the app. -->
     <menuitem id="equipment_maintenance_menu_root"
               name="Equipment Maintenance"
               web_icon="equipment_maintenance_mgmt,static/description/icon.png"
@@ -7,6 +10,8 @@
               sequence="45"/>
 
     <!-- Operations -->
+    <!-- Sub-menus: parent = the menu above, action = window action to open,
+         sequence = display order -->
     <menuitem id="equipment_maintenance_menu_operations" name="Maintenance"
               parent="equipment_maintenance_menu_root" sequence="10"/>
     <menuitem id="equipment_maintenance_request_menu_my" name="My Requests"
@@ -23,6 +28,7 @@
               parent="equipment_maintenance_menu_root" action="equipment_maintenance_equipment_action" sequence="20"/>
 
     <!-- Reporting (managers) -->
+    <!-- Reporting and Configuration menus are restricted to maintenance managers -->
     <menuitem id="equipment_maintenance_menu_reporting" name="Reporting"
               parent="equipment_maintenance_menu_root" sequence="80"
               groups="equipment_maintenance_mgmt_group_manager"/>
@@ -37,6 +43,7 @@
     <menuitem id="equipment_maintenance_menu_config" name="Configuration"
               parent="equipment_maintenance_menu_root" sequence="100"
               groups="equipment_maintenance_mgmt_group_manager"/>
+    <!-- Settings require the Administration / Settings right (base.group_system) -->
     <menuitem id="equipment_maintenance_menu_settings" name="Settings"
               parent="equipment_maintenance_menu_config" action="res_config_settings_action_equipment_maintenance"
               sequence="1" groups="base.group_system"/>

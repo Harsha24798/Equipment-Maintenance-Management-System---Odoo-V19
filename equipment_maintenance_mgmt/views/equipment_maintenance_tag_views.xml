@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Configuration > Tags: editable list (editable="bottom"), no form needed -->
     <record id="equipment_maintenance_tag_view_list" model="ir.ui.view">
         <field name="name">equipment.maintenance.tag.view.list</field>
         <field name="model">equipment.maintenance.tag</field>
@@ -22,6 +23,7 @@
         </field>
     </record>
 
+    <!-- Action opened by the Tags menu -->
     <record id="equipment_maintenance_tag_action" model="ir.actions.act_window">
         <field name="name">Tags</field>
         <field name="res_model">equipment.maintenance.tag</field>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Configuration > Locations. complete_name shows the full path "Plant / Workshop" -->
     <record id="equipment_maintenance_location_view_list" model="ir.ui.view">
         <field name="name">equipment.maintenance.location.view.list</field>
         <field name="model">equipment.maintenance.location</field>
@@ -24,6 +25,7 @@
                     </div>
                     <group>
                         <group>
+                            <!-- parent_id builds the hierarchy (sub-locations) -->
                             <field name="parent_id"/>
                             <field name="active" invisible="1"/>
                         </group>
@@ -49,6 +51,7 @@
         </field>
     </record>
 
+    <!-- Action opened by the Locations menu -->
     <record id="equipment_maintenance_location_action" model="ir.actions.act_window">
         <field name="name">Locations</field>
         <field name="res_model">equipment.maintenance.location</field>

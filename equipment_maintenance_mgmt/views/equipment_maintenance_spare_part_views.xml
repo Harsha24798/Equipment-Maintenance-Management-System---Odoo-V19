@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Maintenance > Spare Parts Consumption: analysis list of all consumed parts.
+         uom_id is shown only when units of measure are enabled (uom.group_uom) -->
     <record id="equipment_maintenance_spare_part_view_list" model="ir.ui.view">
         <field name="name">equipment.maintenance.spare.part.view.list</field>
         <field name="model">equipment.maintenance.spare.part</field>
@@ -34,6 +36,7 @@
         </field>
     </record>
 
+    <!-- Grouped by product when opened -->
     <record id="equipment_maintenance_spare_part_action" model="ir.actions.act_window">
         <field name="name">Spare Parts Consumption</field>
         <field name="res_model">equipment.maintenance.spare.part</field>

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Maintenance > Technician Activities: analysis list of all activity lines.
+         create="0": lines are created from the request form, not here.
+         widget float_time: hours displayed as HH:MM -->
     <record id="equipment_maintenance_activity_view_list" model="ir.ui.view">
         <field name="name">equipment.maintenance.activity.view.list</field>
         <field name="model">equipment.maintenance.activity</field>
@@ -40,6 +43,7 @@
         </field>
     </record>
 
+    <!-- search_default_group_by_technician: grouped by technician when opened -->
     <record id="equipment_maintenance_activity_action" model="ir.actions.act_window">
         <field name="name">Technician Activities</field>
         <field name="res_model">equipment.maintenance.activity</field>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Configuration > Equipment Categories: list, form, search and action -->
     <record id="equipment_maintenance_category_view_list" model="ir.ui.view">
         <field name="name">equipment.maintenance.category.view.list</field>
         <field name="model">equipment.maintenance.category</field>
@@ -19,6 +20,7 @@
         <field name="arch" type="xml">
             <form string="Equipment Category">
                 <sheet>
+                    <!-- Smart button: number of equipment in the category (widget statinfo) -->
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_equipment" type="object"
                                 class="oe_stat_button" icon="fa-cogs">
@@ -33,6 +35,7 @@
                     <group>
                         <group>
                             <field name="code"/>
+                            <!-- color_picker: choose the colour index with a palette -->
                             <field name="color" widget="color_picker"/>
                         </group>
                         <group>
@@ -58,6 +61,7 @@
         </field>
     </record>
 
+    <!-- Action opened by the menu; help = message displayed when there is no record -->
     <record id="equipment_maintenance_category_action" model="ir.actions.act_window">
         <field name="name">Equipment Categories</field>
         <field name="res_model">equipment.maintenance.category</field>

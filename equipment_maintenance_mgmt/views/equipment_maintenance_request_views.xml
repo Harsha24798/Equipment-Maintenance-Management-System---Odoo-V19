@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- LIST VIEW (Odoo 19 uses <list>, formerly <tree>).
+         A view is a record of model ir.ui.view: "model" = the model displayed,
+         "arch" = the XML layout. sample="1": demo rows when empty; multi_edit: edit
+         several selected rows at once; decoration-*: colour a row when the Python
+         expression is true (red = overdue, grey = cancelled). -->
     <record id="equipment_maintenance_request_view_list" model="ir.ui.view">
         <field name="name">equipment.maintenance.request.view.list</field>
         <field name="model">equipment.maintenance.request</field>
@@ -7,38 +12,51 @@
             <list string="Maintenance Requests" sample="1" multi_edit="1"
                   decoration-muted="state == 'cancelled'"
                   decoration-danger="is_overdue">
+                <!-- column_invisible: loaded (needed by decoration-danger) but not shown as a column -->
                 <field name="is_overdue" column_invisible="True"/>
+                <!-- widget: how a field is rendered (priority = stars); optional: column the user can hide/show -->
                 <field name="priority" widget="priority" optional="show"/>
                 <field name="name" readonly="1"/>
+                <!-- readonly="python expression": the cell is read-only for closed requests -->
                 <field name="equipment_id" readonly="state in ('completed', 'cancelled')"/>
                 <field name="category_id" optional="hide"/>
                 <field name="location_id" optional="hide"/>
                 <field name="request_date"/>
                 <field name="scheduled_date" optional="show"/>
                 <field name="request_type" optional="show"/>
+                <!-- Many2many field shown as coloured tags (color_field = the tag colour field) -->
                 <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="hide"/>
                 <field name="technician_id" widget="many2one_avatar_user" optional="show"
                        readonly="state in ('completed', 'cancelled')"/>
+                <!-- activity_ids comes from mail.activity.mixin: shows the planned to-dos -->
                 <field name="activity_ids" widget="list_activity" optional="show"/>
                 <field name="currency_id" column_invisible="True"/>
+                <!-- sum="...": total of the column displayed in the list footer -->
                 <field name="labour_cost" sum="Total" optional="hide"/>
                 <field name="spare_part_cost" sum="Total" optional="hide"/>
                 <field name="total_cost" sum="Total" optional="show"/>
+                <!-- badge widget: coloured pill; decoration-* chooses the colour per status -->
                 <field name="state" widget="badge"
                        decoration-info="state == 'new'"
                        decoration-primary="state == 'assigned'"
                        decoration-warning="state == 'in_progress'"
                        decoration-success="state == 'completed'"/>
+                <!-- groups="...": element visible only to users of that group (multi-company users) -->
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
             </list>
         </field>
     </record>
 
+    <!-- FORM VIEW of a maintenance request -->
     <record id="equipment_maintenance_request_view_form" model="ir.ui.view">
         <field name="name">equipment.maintenance.request.view.form</field>
         <field name="model">equipment.maintenance.request</field>
         <field name="arch" type="xml">
             <form string="Maintenance Request">
+                <!-- <header>: top bar with the workflow buttons and the status bar.
+                     type="object" buttons call the Python method given in name (action_assign...).
+                     invisible="python expression": the button is shown only in the right state.
+                     class="oe_highlight": primary (coloured) button. -->
                 <header>
                     <button name="action_assign" type="object" string="Assign" class="oe_highlight"
                             invisible="state != 'new'"/>
@@ -46,6 +64,7 @@
                             invisible="state != 'assigned'"/>
                     <button name="action_complete" type="object" string="Complete" class="oe_highlight"
                             invisible="state != 'in_progress'"/>
+                    <!-- confirm="...": asks the user for confirmation before calling the method -->
                     <button name="action_cancel" type="object" string="Cancel"
                             invisible="state in ('completed', 'cancelled')"
                             confirm="Are you sure you want to cancel this maintenance request?"/>
@@ -53,23 +72,29 @@
                             invisible="state != 'cancelled'"/>
                     <button name="action_print_request" type="object" string="Print"
                             invisible="state == 'cancelled'"/>
+                    <!-- statusbar widget: workflow steps; statusbar_visible = steps always displayed -->
                     <field name="state" widget="statusbar"
                            statusbar_visible="new,assigned,in_progress,completed"/>
                 </header>
+                <!-- <sheet>: the white "paper" area containing the record fields -->
                 <sheet>
+                    <!-- web_ribbon: diagonal ribbon in the corner, shown according to the state -->
                     <widget name="web_ribbon" title="Completed" bg_color="text-bg-success"
                             invisible="state != 'completed'"/>
                     <widget name="web_ribbon" title="Cancelled" bg_color="text-bg-danger"
                             invisible="state != 'cancelled'"/>
                     <widget name="web_ribbon" title="Overdue" bg_color="text-bg-warning"
                             invisible="not is_overdue"/>
+                    <!-- oe_title: big title area (request number) with the priority stars -->
                     <div class="oe_title">
                         <h1><field name="name" readonly="1"/></h1>
                         <field name="priority" widget="priority"
                                readonly="state in ('completed', 'cancelled')"/>
                     </div>
+                    <!-- <group>: 2-column layout; nested <group string="..."> create titled sections -->
                     <group>
                         <group string="Equipment">
+                            <!-- options no_create: the user can only choose an existing equipment -->
                             <field name="equipment_id" options="{'no_create': True}"
                                    readonly="state != 'new'"/>
                             <field name="category_id"/>
@@ -83,19 +108,23 @@
                                    readonly="state in ('completed', 'cancelled')"/>
                             <field name="request_date" readonly="state != 'new'"/>
                             <field name="scheduled_date" readonly="state in ('completed', 'cancelled')"/>
+                            <!-- required="expression": technician mandatory once the request is assigned -->
                             <field name="technician_id" widget="many2one_avatar_user"
                                    options="{'no_create': True}"
                                    readonly="state in ('completed', 'cancelled')"
                                    required="state in ('assigned', 'in_progress')"/>
+                            <!-- Invisible field: needed because it is used in an invisible= expression (ribbon) -->
                             <field name="is_overdue" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company"
                                    readonly="state != 'new'"/>
                         </group>
+                        <!-- Section shown only after the job has started -->
                         <group string="Timing" invisible="not date_start">
                             <field name="date_start"/>
                             <field name="date_done" invisible="not date_done"/>
                             <field name="duration" widget="float_time" invisible="not date_done"/>
                         </group>
+                        <!-- Costs computed automatically from the activities and spare parts -->
                         <group string="Costs" name="costs">
                             <field name="currency_id" invisible="1"/>
                             <field name="total_hours" widget="float_time"/>
@@ -107,8 +136,11 @@
                     <label for="description"/>
                     <field name="description" placeholder="Describe the problem or the maintenance to perform..."
                            readonly="state in ('completed', 'cancelled')"/>
+                    <!-- <notebook> + <page>: tabs -->
                     <notebook>
                         <page string="Activities" name="activities">
+                            <!-- One2many shown as an editable list (editable="bottom": new line at the bottom).
+                                 context default_request_id: gives the request to the new line (default technician) -->
                             <field name="work_activity_ids"
                                    readonly="state in ('completed', 'cancelled')"
                                    context="{'default_request_id': id}">
@@ -124,6 +156,7 @@
                             </field>
                         </page>
                         <page string="Spare Parts" name="spare_parts">
+                            <!-- One2many of spare parts; unit cost is proposed from the product cost -->
                             <field name="spare_part_ids"
                                    readonly="state in ('completed', 'cancelled')">
                                 <list editable="bottom">
@@ -141,17 +174,22 @@
                             <field name="resolution_note" placeholder="Root cause, work performed, recommendations..."
                                    readonly="state in ('completed', 'cancelled')"/>
                         </page>
+                        <!-- Tab visible only for cancelled requests (or when a reason exists) -->
                         <page string="Cancellation" name="cancellation"
                               invisible="state != 'cancelled' and not cancel_reason">
                             <field name="cancel_reason" placeholder="Why was this request cancelled?"/>
                         </page>
                     </notebook>
                 </sheet>
+                <!-- <chatter/> (Odoo 17+): messages, followers and activities (needs mail.thread) -->
                 <chatter/>
             </form>
         </field>
     </record>
 
+    <!-- KANBAN VIEW: cards grouped by status (default_group_by="state").
+         records_draggable="0": cards cannot be dragged, the status only changes
+         through the workflow buttons; progressbar: priority distribution per column. -->
     <record id="equipment_maintenance_request_view_kanban" model="ir.ui.view">
         <field name="name">equipment.maintenance.request.view.kanban</field>
         <field name="model">equipment.maintenance.request</field>
@@ -162,10 +200,12 @@
                 <field name="currency_id"/>
                 <progressbar field="priority"
                              colors='{"3": "danger", "2": "warning", "1": "info", "0": "muted"}'/>
+                <!-- <t t-name="card">: QWeb template of one card (Odoo 17+ card syntax) -->
                 <templates>
                     <t t-name="card">
                         <div class="d-flex">
                             <field name="name" class="fw-bold fs-5"/>
+                            <!-- t-if: QWeb condition; record.<field>.raw_value = the field value -->
                             <span t-if="record.is_overdue.raw_value" class="badge text-bg-danger ms-auto">Overdue</span>
                         </div>
                         <field name="equipment_id"/>
@@ -175,6 +215,7 @@
                             <i class="fa fa-calendar me-1" title="Scheduled"/><field name="scheduled_date"/>
                         </div>
                         <field name="total_cost" widget="monetary" t-if="record.total_cost.raw_value"/>
+                        <!-- Card footer: priority, activities and technician avatar -->
                         <footer>
                             <div class="d-flex">
                                 <field name="priority" widget="priority"/>
@@ -188,6 +229,8 @@
         </field>
     </record>
 
+    <!-- CALENDAR VIEW: planning by scheduled date, one colour per technician.
+         filters="1" + avatar_field: technician filter panel with pictures -->
     <record id="equipment_maintenance_request_view_calendar" model="ir.ui.view">
         <field name="name">equipment.maintenance.request.view.calendar</field>
         <field name="model">equipment.maintenance.request</field>
@@ -202,6 +245,7 @@
         </field>
     </record>
 
+    <!-- SEARCH VIEW: search fields, predefined filters and group-by options -->
     <record id="equipment_maintenance_request_view_search" model="ir.ui.view">
         <field name="name">equipment.maintenance.request.view.search</field>
         <field name="model">equipment.maintenance.request</field>
@@ -213,8 +257,10 @@
                 <field name="location_id"/>
                 <field name="technician_id"/>
                 <field name="tag_ids"/>
+                <!-- filter domain: condition applied when the filter is selected (uid = current user) -->
                 <filter name="my_requests" string="My Requests" domain="[('technician_id', '=', uid)]"/>
                 <filter name="unassigned" string="Unassigned" domain="[('technician_id', '=', False)]"/>
+                <!-- <separator/>: filters in different blocks are combined with AND, same block with OR -->
                 <separator/>
                 <filter name="pending" string="Pending"
                         domain="[('state', 'in', ('new', 'assigned', 'in_progress'))]"/>
@@ -224,8 +270,10 @@
                 <separator/>
                 <filter name="urgent" string="High Priority" domain="[('priority', 'in', ('2', '3'))]"/>
                 <separator/>
+                <!-- date="field": ready-made period filter (this month, this year...) -->
                 <filter name="filter_request_date" string="Request Date" date="request_date"/>
                 <group>
+                    <!-- context group_by: groups the records by this field -->
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_by_technician" string="Technician" context="{'group_by': 'technician_id'}"/>
                     <filter name="group_by_equipment" string="Equipment" context="{'group_by': 'equipment_id'}"/>
@@ -237,6 +285,8 @@
         </field>
     </record>
 
+    <!-- WINDOW ACTIONS (ir.actions.act_window): what a menu opens.
+         res_model = model, view_mode = available views in order, help = empty screen text. -->
     <record id="equipment_maintenance_request_action" model="ir.actions.act_window">
         <field name="name">Maintenance Requests</field>
         <field name="res_model">equipment.maintenance.request</field>
@@ -248,6 +298,7 @@
         </field>
     </record>
 
+    <!-- context search_default_<filter>: filters activated when the action opens -->
     <record id="equipment_maintenance_request_action_my" model="ir.actions.act_window">
         <field name="name">My Maintenance Requests</field>
         <field name="res_model">equipment.maintenance.request</field>
@@ -260,6 +311,8 @@
     </record>
 
     <!-- Pending maintenance report: open requests grouped by technician -->
+    <!-- Pending maintenance report: domain limits the action to open requests,
+         grouped by technician; view_id forces the list view defined above -->
     <record id="equipment_maintenance_request_action_pending" model="ir.actions.act_window">
         <field name="name">Pending Maintenance</field>
         <field name="res_model">equipment.maintenance.request</field>
