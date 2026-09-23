@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_equipment_history_document">
+        <t t-call="web.external_layout">
+            <t t-set="o" t-value="o.with_context(lang=o.env.user.lang)"/>
+            <t t-set="requests" t-value="o.request_ids.sorted(key=lambda r: (r.request_date, r.id))"/>
+            <div class="page">
+                <h2>Maintenance History: <span t-field="o.name"/></h2>
+                <div class="row mt-3 mb-3">
+                    <div class="col-6">
+                        <strong>Serial Number:</strong> <span t-field="o.serial_no"/><br/>
+                        <strong>Category:</strong> <span t-field="o.category_id"/><br/>
+                        <strong>Location:</strong> <span t-field="o.location_id"/><br/>
+                        <strong>Responsible Employee:</strong> <span t-field="o.employee_id"/>
+                    </div>
+                    <div class="col-6">
+                        <strong>Purchase Date:</strong> <span t-field="o.purchase_date"/><br/>
+                        <strong>Warranty Expiry:</strong> <span t-field="o.warranty_expiry_date"/><br/>
+                        <strong>Warranty Status:</strong> <span t-field="o.warranty_state"/><br/>
+                        <strong>Last Maintenance:</strong> <span t-field="o.last_maintenance_date"/>
+                    </div>
+                </div>
+
+                <table class="table table-sm o_main_table">
+                    <thead>
+                        <tr>
+                            <th>Request</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Technician</th>
+                            <th>Status</th>
+                            <th class="text-end">Hours</th>
+                            <th class="text-end">Labour</th>
+                            <th class="text-end">Spare Parts</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="requests" t-as="req">
+                            <tr>
+                                <td><span t-field="req.name"/></td>
+                                <td><span t-field="req.request_date"/></td>
+                                <td><span t-field="req.request_type"/></td>
+                                <td><span t-field="req.technician_id"/></td>
+                                <td><span t-field="req.state"/></td>
+                                <td class="text-end"><span t-field="req.total_hours" t-options="{'widget': 'float_time'}"/></td>
+                                <td class="text-end"><span t-field="req.labour_cost"/></td>
+                                <td class="text-end"><span t-field="req.spare_part_cost"/></td>
+                                <td class="text-end"><span t-field="req.total_cost"/></td>
+                            </tr>
+                            <tr t-if="req.work_activity_ids or req.spare_part_ids" class="small text-muted">
+                                <td/>
+                                <td colspan="8">
+                                    <t t-foreach="req.work_activity_ids" t-as="act">
+                                        <div>&#8226; <span t-field="act.name"/> (<span t-field="act.technician_id"/>,
+                                            <span t-field="act.hours_spent" t-options="{'widget': 'float_time'}"/> h)</div>
+                                    </t>
+                                    <t t-foreach="req.spare_part_ids" t-as="part">
+                                        <div>&#8226; <span t-field="part.product_id"/> x <span t-field="part.quantity"/></div>
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                        <tr t-if="not requests">
+                            <td colspan="9" class="text-muted">No maintenance recorded for this equipment.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <t t-set="done" t-value="requests.filtered(lambda r: r.state == 'completed')"/>
+                <div class="row justify-content-end">
+                    <div class="col-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Requests (all / completed)</td>
+                                <td class="text-end"><t t-out="len(requests)"/> / <t t-out="len(done)"/></td>
+                            </tr>
+                            <tr>
+                                <td>Labour Cost (completed)</td>
+                                <td class="text-end"><span t-out="sum(done.mapped('labour_cost'))"
+                                    t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                            </tr>
+                            <tr>
+                                <td>Spare Part Cost (completed)</td>
+                                <td class="text-end"><span t-out="sum(done.mapped('spare_part_cost'))"
+                                    t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                            </tr>
+                            <tr class="border-top fw-bold">
+                                <td>Total Maintenance Cost</td>
+                                <td class="text-end"><span t-field="o.total_maintenance_cost"/></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_equipment_history">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="equipment_maintenance_mgmt.report_equipment_history_document"/>
+            </t>
+        </t>
+    </template>
+</odoo>

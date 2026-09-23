@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="equipment_maintenance_request_action_report" model="ir.actions.report">
+        <field name="name">Maintenance Work Order</field>
+        <field name="model">equipment.maintenance.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">equipment_maintenance_mgmt.report_maintenance_request</field>
+        <field name="report_file">equipment_maintenance_mgmt.report_maintenance_request</field>
+        <field name="print_report_name">'Work Order - %s' % object.name.replace('/', '-')</field>
+        <field name="binding_model_id" ref="model_equipment_maintenance_request"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="equipment_maintenance_request_action_report_pending" model="ir.actions.report">
+        <field name="name">Pending Maintenance Summary</field>
+        <field name="model">equipment.maintenance.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">equipment_maintenance_mgmt.report_pending_maintenance</field>
+        <field name="report_file">equipment_maintenance_mgmt.report_pending_maintenance</field>
+        <field name="print_report_name">'Pending Maintenance'</field>
+        <field name="binding_model_id" ref="model_equipment_maintenance_request"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="equipment_maintenance_equipment_action_report_history" model="ir.actions.report">
+        <field name="name">Equipment Maintenance History</field>
+        <field name="model">equipment.maintenance.equipment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">equipment_maintenance_mgmt.report_equipment_history</field>
+        <field name="report_file">equipment_maintenance_mgmt.report_equipment_history</field>
+        <field name="print_report_name">'Maintenance History - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_equipment_maintenance_equipment"/>
+        <field name="binding_type">report</field>
+        <field name="group_ids" eval="[(4, ref('equipment_maintenance_mgmt.equipment_maintenance_mgmt_group_manager'))]"/>
+    </record>
+</odoo>

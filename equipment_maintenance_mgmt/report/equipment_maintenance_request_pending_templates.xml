@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_pending_maintenance">
+        <t t-call="web.html_container">
+            <t t-set="pending" t-value="docs.filtered(lambda r: r.state in ('new', 'assigned', 'in_progress')).sorted(key=lambda r: (r.technician_id.name or '', -int(r.priority), r.scheduled_date or r.request_date))"/>
+            <t t-set="company" t-value="docs[:1].company_id or res_company"/>
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2>Pending Maintenance Summary</h2>
+                    <p class="text-muted">
+                        <t t-out="len(pending)"/> pending request(s)
+                    </p>
+                    <table class="table table-sm o_main_table">
+                        <thead>
+                            <tr>
+                                <th>Technician</th>
+                                <th>Request</th>
+                                <th>Equipment</th>
+                                <th>Location</th>
+                                <th>Priority</th>
+                                <th>Requested</th>
+                                <th>Scheduled</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="pending" t-as="req"
+                                t-att-class="'text-danger' if req.is_overdue else ''">
+                                <td><t t-if="req.technician_id"><span t-field="req.technician_id"/></t><t t-else=""><em>Unassigned</em></t></td>
+                                <td><span t-field="req.name"/></td>
+                                <td><span t-field="req.equipment_id"/></td>
+                                <td><span t-field="req.location_id"/></td>
+                                <td><span t-field="req.priority"/></td>
+                                <td><span t-field="req.request_date"/></td>
+                                <td><span t-field="req.scheduled_date"/><t t-if="req.is_overdue"> (overdue)</t></td>
+                                <td><span t-field="req.state"/></td>
+                            </tr>
+                            <tr t-if="not pending">
+                                <td colspan="8" class="text-muted">No pending maintenance in the selection.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>
