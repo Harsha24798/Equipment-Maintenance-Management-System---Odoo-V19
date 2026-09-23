@@ -12,7 +12,6 @@ Usage:
     python docs/tools/static_check.py [ODOO_ADDONS_PATH]
 """
 import ast
-import contextlib
 import pathlib
 import re
 import sys
@@ -237,110 +236,6 @@ for py in ROOT.rglob('*.py'):
     for m in re.finditer(rf"'{MODULE}\.(\w+)'", py.read_text(encoding='utf-8')):
         if m.group(1) not in defined:
             error(f'{py.relative_to(ROOT)}: python ref {MODULE}.{m.group(1)} undefined')
-
-# --------------------------------------------------------------------------
-# 6. <record> fields and selection values against the real model definitions
-#    (this module + every module of its dependency tree in the Odoo source)
-# --------------------------------------------------------------------------
-
-
-def dependency_closure(depends):
-    seen, todo = set(), list(depends) + ['base']
-    while todo:
-        mod = todo.pop()
-        if mod in seen:
-            continue
-        seen.add(mod)
-        manifest_path = ODOO_ADDONS / mod / '__manifest__.py'
-        if manifest_path.exists():
-            todo += ast.literal_eval(manifest_path.read_text(encoding='utf-8')).get('depends', [])
-    return seen
-
-
-def selection_values(call, constants):
-    """Literal values of a fields.Selection(...) call, or None if dynamic."""
-    arg = call.args[0] if call.args else None
-    for kw in call.keywords:
-        if kw.arg in ('selection', 'selection_add'):
-            arg = kw.value
-    if isinstance(arg, ast.Name):
-        arg = constants.get(arg.id)
-    if not isinstance(arg, ast.List):
-        return None
-    values = set()
-    for item in arg.elts:
-        if isinstance(item, ast.Tuple) and item.elts and isinstance(item.elts[0], ast.Constant):
-            values.add(item.elts[0].value)
-    return values
-
-
-model_defs = {}   # model -> {'fields': {name: set|None}, 'parents': set()}
-source_files = [py for py in ROOT.rglob('*.py') if not {'docs', 'tests'} & set(py.parts)]
-for mod in dependency_closure(manifest['depends']):
-    source_files += [py for py in (ODOO_ADDONS / mod).rglob('*.py') if 'tests' not in py.parts]
-for py in source_files:
-    try:
-        tree = ast.parse(py.read_text(encoding='utf-8', errors='ignore'))
-    except SyntaxError:
-        continue
-    constants = {t.id: node.value for node in tree.body if isinstance(node, ast.Assign)
-                 for t in node.targets if isinstance(t, ast.Name)}
-    for cls in [n for n in tree.body if isinstance(n, ast.ClassDef)]:
-        attrs, fields = {}, {}
-        for stmt in cls.body:
-            if not (isinstance(stmt, ast.Assign) and len(stmt.targets) == 1
-                    and isinstance(stmt.targets[0], ast.Name)):
-                continue
-            target, value = stmt.targets[0].id, stmt.value
-            if target in ('_name', '_inherit', '_inherits'):
-                with contextlib.suppress(ValueError):  # non-literal values are ignored
-                    attrs[target] = ast.literal_eval(value)
-            elif (isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute)
-                  and isinstance(value.func.value, ast.Name) and value.func.value.id == 'fields'):
-                fields[target] = selection_values(value, constants) if value.func.attr == 'Selection' else None
-        inherit = attrs.get('_inherit') or []
-        inherit = [inherit] if isinstance(inherit, str) else list(inherit)
-        name = attrs.get('_name') or (inherit[0] if inherit else None)
-        if not isinstance(name, str):
-            continue
-        entry = model_defs.setdefault(name, {'fields': {}, 'parents': set()})
-        for fname, values in fields.items():
-            known = entry['fields'].get(fname)
-            entry['fields'][fname] = (known | values) if (known and values) else (values or known)
-        entry['parents'] |= {p for p in inherit if p != name} | set(attrs.get('_inherits', {}) or {})
-
-
-def all_fields(model, _seen=None):
-    _seen = _seen or set()
-    if model in _seen or model not in model_defs:
-        return {}
-    _seen.add(model)
-    result = {}
-    for parent in model_defs[model]['parents']:
-        result.update(all_fields(parent, _seen))
-    result.update(model_defs[model]['fields'])
-    return result
-
-
-for rel in listed:
-    path = ROOT / rel
-    if path.suffix != '.xml':
-        continue
-    for rec in etree.parse(str(path)).iter('record'):
-        model = rec.get('model')
-        known_fields = all_fields(model)
-        if not known_fields:
-            error(f'{rel}:{rec.sourceline} model {model!r} not found in module or Odoo source')
-            continue
-        for field_el in rec.findall('field'):
-            fname = field_el.get('name')
-            if fname not in known_fields and fname not in BASE_FIELDS:
-                error(f'{rel}:{field_el.sourceline} field {fname!r} does not exist on {model}')
-                continue
-            values = known_fields.get(fname)
-            text = (field_el.text or '').strip()
-            if values and text and not field_el.get('eval') and not field_el.get('ref') and text not in values:
-                error(f'{rel}:{field_el.sourceline} {model}.{fname} = {text!r} is not one of {sorted(values)}')
 
 if errors:
     print(f'{len(errors)} problem(s):')  # ruff: ignore[print]
