@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="equipment_maintenance_request_view_list" model="ir.ui.view">
+        <field name="name">equipment.maintenance.request.view.list</field>
+        <field name="model">equipment.maintenance.request</field>
+        <field name="arch" type="xml">
+            <list string="Maintenance Requests" sample="1" multi_edit="1"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-danger="is_overdue">
+                <field name="is_overdue" column_invisible="True"/>
+                <field name="priority" widget="priority" optional="show"/>
+                <field name="name" readonly="1"/>
+                <field name="equipment_id" readonly="state in ('completed', 'cancelled')"/>
+                <field name="category_id" optional="hide"/>
+                <field name="location_id" optional="hide"/>
+                <field name="request_date"/>
+                <field name="scheduled_date" optional="show"/>
+                <field name="request_type" optional="show"/>
+                <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="hide"/>
+                <field name="technician_id" widget="many2one_avatar_user" optional="show"
+                       readonly="state in ('completed', 'cancelled')"/>
+                <field name="activity_ids" widget="list_activity" optional="show"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="labour_cost" sum="Total" optional="hide"/>
+                <field name="spare_part_cost" sum="Total" optional="hide"/>
+                <field name="total_cost" sum="Total" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'new'"
+                       decoration-primary="state == 'assigned'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state == 'completed'"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_request_view_form" model="ir.ui.view">
+        <field name="name">equipment.maintenance.request.view.form</field>
+        <field name="model">equipment.maintenance.request</field>
+        <field name="arch" type="xml">
+            <form string="Maintenance Request">
+                <header>
+                    <button name="action_assign" type="object" string="Assign" class="oe_highlight"
+                            invisible="state != 'new'"/>
+                    <button name="action_start" type="object" string="Start" class="oe_highlight"
+                            invisible="state != 'assigned'"/>
+                    <button name="action_complete" type="object" string="Complete" class="oe_highlight"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state in ('completed', 'cancelled')"
+                            confirm="Are you sure you want to cancel this maintenance request?"/>
+                    <button name="action_reset_to_new" type="object" string="Reset to New"
+                            invisible="state != 'cancelled'"/>
+                    <button name="action_print_request" type="object" string="Print"
+                            invisible="state == 'cancelled'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="new,assigned,in_progress,completed"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Completed" bg_color="text-bg-success"
+                            invisible="state != 'completed'"/>
+                    <widget name="web_ribbon" title="Cancelled" bg_color="text-bg-danger"
+                            invisible="state != 'cancelled'"/>
+                    <widget name="web_ribbon" title="Overdue" bg_color="text-bg-warning"
+                            invisible="not is_overdue"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                        <field name="priority" widget="priority"
+                               readonly="state in ('completed', 'cancelled')"/>
+                    </div>
+                    <group>
+                        <group string="Equipment">
+                            <field name="equipment_id" options="{'no_create': True}"
+                                   readonly="state != 'new'"/>
+                            <field name="category_id"/>
+                            <field name="location_id"/>
+                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                        </group>
+                        <group string="Request">
+                            <field name="request_type" readonly="state in ('completed', 'cancelled')"/>
+                            <field name="tag_ids" widget="many2many_tags"
+                                   options="{'color_field': 'color', 'no_create_edit': True}"
+                                   readonly="state in ('completed', 'cancelled')"/>
+                            <field name="request_date" readonly="state != 'new'"/>
+                            <field name="scheduled_date" readonly="state in ('completed', 'cancelled')"/>
+                            <field name="technician_id" widget="many2one_avatar_user"
+                                   options="{'no_create': True}"
+                                   readonly="state in ('completed', 'cancelled')"
+                                   required="state in ('assigned', 'in_progress')"/>
+                            <field name="is_overdue" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company"
+                                   readonly="state != 'new'"/>
+                        </group>
+                        <group string="Timing" invisible="not date_start">
+                            <field name="date_start"/>
+                            <field name="date_done" invisible="not date_done"/>
+                            <field name="duration" widget="float_time" invisible="not date_done"/>
+                        </group>
+                        <group string="Costs" name="costs">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="total_hours" widget="float_time"/>
+                            <field name="labour_cost"/>
+                            <field name="spare_part_cost"/>
+                            <field name="total_cost" class="fw-bold"/>
+                        </group>
+                    </group>
+                    <label for="description"/>
+                    <field name="description" placeholder="Describe the problem or the maintenance to perform..."
+                           readonly="state in ('completed', 'cancelled')"/>
+                    <notebook>
+                        <page string="Activities" name="activities">
+                            <field name="work_activity_ids"
+                                   readonly="state in ('completed', 'cancelled')"
+                                   context="{'default_request_id': id}">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="name"/>
+                                    <field name="technician_id" widget="many2one_avatar_user"/>
+                                    <field name="hours_spent" widget="float_time" sum="Total Hours"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="labour_rate"/>
+                                    <field name="cost" sum="Labour Cost"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Spare Parts" name="spare_parts">
+                            <field name="spare_part_ids"
+                                   readonly="state in ('completed', 'cancelled')">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="name" optional="hide"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id" groups="uom.group_uom"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="unit_cost"/>
+                                    <field name="total_cost" sum="Spare Part Cost"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Resolution" name="resolution">
+                            <field name="resolution_note" placeholder="Root cause, work performed, recommendations..."
+                                   readonly="state in ('completed', 'cancelled')"/>
+                        </page>
+                        <page string="Cancellation" name="cancellation"
+                              invisible="state != 'cancelled' and not cancel_reason">
+                            <field name="cancel_reason" placeholder="Why was this request cancelled?"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_request_view_kanban" model="ir.ui.view">
+        <field name="name">equipment.maintenance.request.view.kanban</field>
+        <field name="model">equipment.maintenance.request</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" sample="1" quick_create="0"
+                    records_draggable="0" group_create="0" group_delete="0" group_edit="0">
+                <field name="is_overdue"/>
+                <field name="currency_id"/>
+                <progressbar field="priority"
+                             colors='{"3": "danger", "2": "warning", "1": "info", "0": "muted"}'/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex">
+                            <field name="name" class="fw-bold fs-5"/>
+                            <span t-if="record.is_overdue.raw_value" class="badge text-bg-danger ms-auto">Overdue</span>
+                        </div>
+                        <field name="equipment_id"/>
+                        <field name="request_type" class="text-muted"/>
+                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                        <div t-if="record.scheduled_date.raw_value">
+                            <i class="fa fa-calendar me-1" title="Scheduled"/><field name="scheduled_date"/>
+                        </div>
+                        <field name="total_cost" widget="monetary" t-if="record.total_cost.raw_value"/>
+                        <footer>
+                            <div class="d-flex">
+                                <field name="priority" widget="priority"/>
+                                <field name="activity_ids" widget="kanban_activity" class="ms-2"/>
+                            </div>
+                            <field name="technician_id" widget="many2one_avatar_user" class="ms-auto"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_request_view_calendar" model="ir.ui.view">
+        <field name="name">equipment.maintenance.request.view.calendar</field>
+        <field name="model">equipment.maintenance.request</field>
+        <field name="arch" type="xml">
+            <calendar string="Maintenance Planning" date_start="scheduled_date" color="technician_id"
+                      mode="month" event_open_popup="1" quick_create="0">
+                <field name="equipment_id"/>
+                <field name="technician_id" filters="1" avatar_field="avatar_128"/>
+                <field name="request_type"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_request_view_search" model="ir.ui.view">
+        <field name="name">equipment.maintenance.request.view.search</field>
+        <field name="model">equipment.maintenance.request</field>
+        <field name="arch" type="xml">
+            <search string="Search Maintenance Requests">
+                <field name="name"/>
+                <field name="equipment_id"/>
+                <field name="category_id"/>
+                <field name="location_id"/>
+                <field name="technician_id"/>
+                <field name="tag_ids"/>
+                <filter name="my_requests" string="My Requests" domain="[('technician_id', '=', uid)]"/>
+                <filter name="unassigned" string="Unassigned" domain="[('technician_id', '=', False)]"/>
+                <separator/>
+                <filter name="pending" string="Pending"
+                        domain="[('state', 'in', ('new', 'assigned', 'in_progress'))]"/>
+                <filter name="overdue" string="Overdue" domain="[('is_overdue', '=', True)]"/>
+                <filter name="completed" string="Completed" domain="[('state', '=', 'completed')]"/>
+                <filter name="cancelled" string="Cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter name="urgent" string="High Priority" domain="[('priority', 'in', ('2', '3'))]"/>
+                <separator/>
+                <filter name="filter_request_date" string="Request Date" date="request_date"/>
+                <group>
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_technician" string="Technician" context="{'group_by': 'technician_id'}"/>
+                    <filter name="group_by_equipment" string="Equipment" context="{'group_by': 'equipment_id'}"/>
+                    <filter name="group_by_category" string="Category" context="{'group_by': 'category_id'}"/>
+                    <filter name="group_by_type" string="Request Type" context="{'group_by': 'request_type'}"/>
+                    <filter name="group_by_request_date" string="Request Date" context="{'group_by': 'request_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_request_action" model="ir.actions.act_window">
+        <field name="name">Maintenance Requests</field>
+        <field name="res_model">equipment.maintenance.request</field>
+        <field name="view_mode">kanban,list,form,calendar,activity</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a maintenance request</p>
+            <p>Follow the request from creation to completion: assign a technician,
+               record activities and spare parts, costs are computed automatically.</p>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_request_action_my" model="ir.actions.act_window">
+        <field name="name">My Maintenance Requests</field>
+        <field name="res_model">equipment.maintenance.request</field>
+        <field name="view_mode">kanban,list,form,calendar,activity</field>
+        <field name="context">{'search_default_my_requests': 1, 'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No request assigned to you</p>
+            <p>Requests assigned to you by your maintenance manager appear here.</p>
+        </field>
+    </record>
+
+    <!-- Pending maintenance report: open requests grouped by technician -->
+    <record id="equipment_maintenance_request_action_pending" model="ir.actions.act_window">
+        <field name="name">Pending Maintenance</field>
+        <field name="res_model">equipment.maintenance.request</field>
+        <field name="view_mode">list,kanban,form,calendar</field>
+        <field name="view_id" ref="equipment_maintenance_request_view_list"/>
+        <field name="domain">[('state', 'in', ('new', 'assigned', 'in_progress'))]</field>
+        <field name="context">{'search_default_group_by_technician': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No pending maintenance</p>
+            <p>All maintenance requests are completed or cancelled.</p>
+        </field>
+    </record>
+</odoo>

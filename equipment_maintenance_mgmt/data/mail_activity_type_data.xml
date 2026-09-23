@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mail_activity_data_maintenance_todo" model="mail.activity.type">
+            <field name="name">Maintenance To-Do</field>
+            <field name="summary">Perform maintenance</field>
+            <field name="icon">fa-wrench</field>
+            <field name="res_model">equipment.maintenance.request</field>
+            <field name="delay_count">0</field>
+        </record>
+        <record id="mail_activity_data_warranty_expiry" model="mail.activity.type">
+            <field name="name">Warranty Expiry</field>
+            <field name="summary">Warranty is about to expire</field>
+            <field name="icon">fa-shield</field>
+            <field name="res_model">equipment.maintenance.equipment</field>
+            <field name="delay_count">0</field>
+        </record>
+    </data>
+</odoo>

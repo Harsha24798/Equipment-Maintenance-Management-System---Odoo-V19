@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default request tags. noupdate: users may rename or archive them. -->
+    <data noupdate="1">
+        <record id="tag_electrical" model="equipment.maintenance.tag">
+            <field name="name">Electrical</field>
+            <field name="color">3</field>
+        </record>
+        <record id="tag_mechanical" model="equipment.maintenance.tag">
+            <field name="name">Mechanical</field>
+            <field name="color">2</field>
+        </record>
+        <record id="tag_safety" model="equipment.maintenance.tag">
+            <field name="name">Safety</field>
+            <field name="color">1</field>
+        </record>
+        <record id="tag_warranty_claim" model="equipment.maintenance.tag">
+            <field name="name">Warranty Claim</field>
+            <field name="color">10</field>
+        </record>
+    </data>
+</odoo>
