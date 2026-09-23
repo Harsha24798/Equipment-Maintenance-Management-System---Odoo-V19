@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="equipment_maintenance_activity_view_list" model="ir.ui.view">
+        <field name="name">equipment.maintenance.activity.view.list</field>
+        <field name="model">equipment.maintenance.activity</field>
+        <field name="arch" type="xml">
+            <list string="Maintenance Activities" create="0">
+                <field name="date"/>
+                <field name="request_id"/>
+                <field name="equipment_id"/>
+                <field name="name"/>
+                <field name="technician_id" widget="many2one_avatar_user"/>
+                <field name="hours_spent" sum="Total Hours" widget="float_time"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="labour_rate"/>
+                <field name="cost" sum="Total Cost"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_activity_view_search" model="ir.ui.view">
+        <field name="name">equipment.maintenance.activity.view.search</field>
+        <field name="model">equipment.maintenance.activity</field>
+        <field name="arch" type="xml">
+            <search string="Search Activities">
+                <field name="name"/>
+                <field name="request_id"/>
+                <field name="equipment_id"/>
+                <field name="technician_id"/>
+                <filter name="my_activities" string="My Activities" domain="[('technician_id', '=', uid)]"/>
+                <separator/>
+                <filter name="filter_date" string="Date" date="date"/>
+                <group>
+                    <filter name="group_by_technician" string="Technician" context="{'group_by': 'technician_id'}"/>
+                    <filter name="group_by_equipment" string="Equipment" context="{'group_by': 'equipment_id'}"/>
+                    <filter name="group_by_date" string="Date" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="equipment_maintenance_activity_action" model="ir.actions.act_window">
+        <field name="name">Technician Activities</field>
+        <field name="res_model">equipment.maintenance.activity</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_group_by_technician': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No technician activity yet</p>
+            <p>Activities are recorded on maintenance requests.</p>
+        </field>
+    </record>
+</odoo>
