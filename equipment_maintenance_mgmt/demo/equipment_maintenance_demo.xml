@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ====================== Users & employees ====================== -->
+    <record id="user_technician_kasun" model="res.users">
+        <field name="name">Kasun Perera</field>
+        <field name="login">kasun</field>
+        <field name="password">kasun</field>
+        <field name="email">kasun.perera@example.com</field>
+        <field name="group_ids" eval="[Command.set([ref('equipment_maintenance_mgmt_group_technician')])]"/>
+    </record>
+    <record id="user_technician_nimal" model="res.users">
+        <field name="name">Nimal Silva</field>
+        <field name="login">nimal</field>
+        <field name="password">nimal</field>
+        <field name="email">nimal.silva@example.com</field>
+        <field name="group_ids" eval="[Command.set([ref('equipment_maintenance_mgmt_group_technician')])]"/>
+    </record>
+    <record id="user_maintenance_manager" model="res.users">
+        <field name="name">Dilani Fernando</field>
+        <field name="login">dilani</field>
+        <field name="password">dilani</field>
+        <field name="email">dilani.fernando@example.com</field>
+        <field name="group_ids" eval="[Command.set([ref('equipment_maintenance_mgmt_group_manager')])]"/>
+    </record>
+
+    <record id="employee_kasun" model="hr.employee">
+        <field name="name">Kasun Perera</field>
+        <field name="user_id" ref="user_technician_kasun"/>
+        <field name="job_title">Maintenance Technician</field>
+        <field name="hourly_cost">1500.0</field>
+    </record>
+    <record id="employee_nimal" model="hr.employee">
+        <field name="name">Nimal Silva</field>
+        <field name="user_id" ref="user_technician_nimal"/>
+        <field name="job_title">Senior Technician</field>
+        <field name="hourly_cost">2000.0</field>
+    </record>
+    <record id="employee_dilani" model="hr.employee">
+        <field name="name">Dilani Fernando</field>
+        <field name="user_id" ref="user_maintenance_manager"/>
+        <field name="job_title">Maintenance Manager</field>
+    </record>
+
+    <record id="base.main_company" model="res.company">
+        <field name="maintenance_labour_rate">1200.0</field>
+    </record>
+
+    <!-- ====================== Locations ====================== -->
+    <record id="location_colombo_plant" model="equipment.maintenance.location">
+        <field name="name">Colombo Plant</field>
+    </record>
+    <record id="location_workshop_a" model="equipment.maintenance.location">
+        <field name="name">Workshop A</field>
+        <field name="parent_id" ref="location_colombo_plant"/>
+    </record>
+    <record id="location_head_office" model="equipment.maintenance.location">
+        <field name="name">Head Office</field>
+    </record>
+    <record id="location_server_room" model="equipment.maintenance.location">
+        <field name="name">Server Room</field>
+        <field name="parent_id" ref="location_head_office"/>
+    </record>
+
+    <!-- ====================== Spare parts ====================== -->
+    <record id="product_bearing" model="product.product">
+        <field name="name">Ball Bearing 6205</field>
+        <field name="type">consu</field>
+        <field name="default_code">SP-BRG-6205</field>
+        <field name="standard_price">850.0</field>
+        <field name="list_price">1200.0</field>
+    </record>
+    <record id="product_oil_filter" model="product.product">
+        <field name="name">Oil Filter</field>
+        <field name="type">consu</field>
+        <field name="default_code">SP-FLT-OIL</field>
+        <field name="standard_price">2400.0</field>
+        <field name="list_price">3000.0</field>
+    </record>
+    <record id="product_hydraulic_oil" model="product.product">
+        <field name="name">Hydraulic Oil (1L)</field>
+        <field name="type">consu</field>
+        <field name="default_code">SP-OIL-HYD</field>
+        <field name="standard_price">1800.0</field>
+        <field name="list_price">2200.0</field>
+    </record>
+    <record id="product_air_filter" model="product.product">
+        <field name="name">HVAC Air Filter</field>
+        <field name="type">consu</field>
+        <field name="default_code">SP-FLT-AIR</field>
+        <field name="standard_price">3500.0</field>
+        <field name="list_price">4500.0</field>
+    </record>
+    <record id="product_ssd" model="product.product">
+        <field name="name">SSD 1TB</field>
+        <field name="type">consu</field>
+        <field name="default_code">SP-IT-SSD1T</field>
+        <field name="standard_price">28000.0</field>
+        <field name="list_price">32000.0</field>
+    </record>
+
+    <!-- ====================== Equipment ====================== -->
+    <record id="equipment_cnc_lathe" model="equipment.maintenance.equipment">
+        <field name="name">CNC Lathe Machine</field>
+        <field name="serial_no">CNC-2023-0001</field>
+        <field name="category_id" ref="category_machinery"/>
+        <field name="location_id" ref="location_workshop_a"/>
+        <field name="employee_id" ref="employee_nimal"/>
+        <field name="model">HAAS ST-20</field>
+        <field name="manufacturer">Haas Automation</field>
+        <field name="purchase_cost">4500000</field>
+        <field name="purchase_date" eval="(DateTime.today() - relativedelta(years=2)).strftime('%Y-%m-%d')"/>
+        <field name="warranty_expiry_date" eval="(DateTime.today() + relativedelta(years=1)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="equipment_hydraulic_press" model="equipment.maintenance.equipment">
+        <field name="name">Hydraulic Press</field>
+        <field name="serial_no">HP-2021-0457</field>
+        <field name="category_id" ref="category_machinery"/>
+        <field name="location_id" ref="location_workshop_a"/>
+        <field name="employee_id" ref="employee_kasun"/>
+        <field name="purchase_date" eval="(DateTime.today() - relativedelta(years=4)).strftime('%Y-%m-%d')"/>
+        <field name="warranty_expiry_date" eval="(DateTime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="equipment_generator" model="equipment.maintenance.equipment">
+        <field name="name">Diesel Generator 250kVA</field>
+        <field name="serial_no">GEN-250-8812</field>
+        <field name="category_id" ref="category_facility"/>
+        <field name="location_id" ref="location_colombo_plant"/>
+        <field name="employee_id" ref="employee_nimal"/>
+        <field name="purchase_date" eval="(DateTime.today() - relativedelta(years=1)).strftime('%Y-%m-%d')"/>
+        <field name="warranty_expiry_date" eval="(DateTime.today() + relativedelta(days=20)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="equipment_hvac" model="equipment.maintenance.equipment">
+        <field name="name">Central HVAC Unit</field>
+        <field name="serial_no">HVAC-HO-0003</field>
+        <field name="category_id" ref="category_facility"/>
+        <field name="location_id" ref="location_head_office"/>
+        <field name="employee_id" ref="employee_dilani"/>
+        <field name="purchase_date" eval="(DateTime.today() - relativedelta(months=8)).strftime('%Y-%m-%d')"/>
+        <field name="warranty_expiry_date" eval="(DateTime.today() + relativedelta(years=2)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="equipment_server" model="equipment.maintenance.equipment">
+        <field name="name">File Server</field>
+        <field name="serial_no">SRV-DL380-7781</field>
+        <field name="category_id" ref="category_it"/>
+        <field name="location_id" ref="location_server_room"/>
+        <field name="employee_id" ref="employee_kasun"/>
+        <field name="model">HPE ProLiant DL380</field>
+        <field name="purchase_date" eval="(DateTime.today() - relativedelta(years=3)).strftime('%Y-%m-%d')"/>
+        <field name="warranty_expiry_date" eval="(DateTime.today() - relativedelta(days=10)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="equipment_forklift" model="equipment.maintenance.equipment">
+        <field name="name">Forklift 3T</field>
+        <field name="serial_no">FL-3T-2290</field>
+        <field name="category_id" ref="category_vehicle"/>
+        <field name="location_id" ref="location_colombo_plant"/>
+        <field name="employee_id" ref="employee_kasun"/>
+        <field name="purchase_date" eval="(DateTime.today() - relativedelta(months=18)).strftime('%Y-%m-%d')"/>
+        <field name="warranty_expiry_date" eval="(DateTime.today() + relativedelta(months=6)).strftime('%Y-%m-%d')"/>
+    </record>
+
+    <!-- ====================== Maintenance requests ====================== -->
+    <!-- 1. New, unassigned -->
+    <record id="request_forklift_new" model="equipment.maintenance.request">
+        <field name="tag_ids" eval="[Command.set([ref('tag_safety')])]"/>
+        <field name="equipment_id" ref="equipment_forklift"/>
+        <field name="request_type">inspection</field>
+        <field name="priority">1</field>
+        <field name="request_date" eval="DateTime.today().strftime('%Y-%m-%d')"/>
+        <field name="description"><![CDATA[<p>Quarterly safety inspection of forks, chains and brakes.</p>]]></field>
+    </record>
+
+    <!-- 2. Assigned (technician set on creation) -->
+    <record id="request_hvac_assigned" model="equipment.maintenance.request">
+        <field name="equipment_id" ref="equipment_hvac"/>
+        <field name="request_type">preventive</field>
+        <field name="priority">2</field>
+        <field name="technician_id" ref="user_technician_kasun"/>
+        <field name="request_date" eval="(DateTime.today() - relativedelta(days=3)).strftime('%Y-%m-%d')"/>
+        <field name="scheduled_date" eval="(DateTime.today() + relativedelta(days=2)).strftime('%Y-%m-%d')"/>
+        <field name="description"><![CDATA[<p>Replace air filters and clean condenser coils.</p>]]></field>
+    </record>
+
+    <!-- 3. In progress and overdue -->
+    <record id="request_press_in_progress" model="equipment.maintenance.request">
+        <field name="tag_ids" eval="[Command.set([ref('tag_mechanical'), ref('tag_safety')])]"/>
+        <field name="equipment_id" ref="equipment_hydraulic_press"/>
+        <field name="request_type">corrective</field>
+        <field name="priority">3</field>
+        <field name="technician_id" ref="user_technician_kasun"/>
+        <field name="request_date" eval="(DateTime.today() - relativedelta(days=10)).strftime('%Y-%m-%d')"/>
+        <field name="scheduled_date" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="description"><![CDATA[<p>Oil leak on main cylinder, pressure drops under load.</p>]]></field>
+    </record>
+    <function model="equipment.maintenance.request" name="action_start"
+              eval="[[ref('request_press_in_progress')]]"/>
+    <record id="activity_press_1" model="equipment.maintenance.activity">
+        <field name="request_id" ref="request_press_in_progress"/>
+        <field name="name">Diagnose leak and dismantle cylinder seals</field>
+        <field name="technician_id" ref="user_technician_kasun"/>
+        <field name="hours_spent">3.5</field>
+    </record>
+    <record id="spare_press_1" model="equipment.maintenance.spare.part">
+        <field name="request_id" ref="request_press_in_progress"/>
+        <field name="product_id" ref="product_hydraulic_oil"/>
+        <field name="quantity">10</field>
+    </record>
+
+    <!-- 4. Completed (CNC) -->
+    <record id="request_cnc_completed" model="equipment.maintenance.request">
+        <field name="tag_ids" eval="[Command.set([ref('tag_mechanical')])]"/>
+        <field name="equipment_id" ref="equipment_cnc_lathe"/>
+        <field name="request_type">preventive</field>
+        <field name="priority">1</field>
+        <field name="technician_id" ref="user_technician_nimal"/>
+        <field name="request_date" eval="(DateTime.today() - relativedelta(months=2)).strftime('%Y-%m-%d')"/>
+        <field name="scheduled_date" eval="(DateTime.today() - relativedelta(months=2)).strftime('%Y-%m-%d')"/>
+        <field name="description"><![CDATA[<p>Six-monthly preventive maintenance.</p>]]></field>
+        <field name="resolution_note"><![CDATA[<p>Spindle bearings replaced, lubrication done, alignment checked.</p>]]></field>
+    </record>
+    <function model="equipment.maintenance.request" name="action_start"
+              eval="[[ref('request_cnc_completed')]]"/>
+    <record id="activity_cnc_1" model="equipment.maintenance.activity">
+        <field name="request_id" ref="request_cnc_completed"/>
+        <field name="name">Replace spindle bearings</field>
+        <field name="technician_id" ref="user_technician_nimal"/>
+        <field name="hours_spent">4</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(months=2)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="activity_cnc_2" model="equipment.maintenance.activity">
+        <field name="request_id" ref="request_cnc_completed"/>
+        <field name="name">Lubrication and alignment check</field>
+        <field name="technician_id" ref="user_technician_kasun"/>
+        <field name="hours_spent">2</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(months=2)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="spare_cnc_1" model="equipment.maintenance.spare.part">
+        <field name="request_id" ref="request_cnc_completed"/>
+        <field name="product_id" ref="product_bearing"/>
+        <field name="quantity">4</field>
+    </record>
+    <function model="equipment.maintenance.request" name="action_complete"
+              eval="[[ref('request_cnc_completed')]]"/>
+
+    <!-- 5. Completed (Generator) -->
+    <record id="request_generator_completed" model="equipment.maintenance.request">
+        <field name="tag_ids" eval="[Command.set([ref('tag_electrical'), ref('tag_mechanical')])]"/>
+        <field name="equipment_id" ref="equipment_generator"/>
+        <field name="request_type">preventive</field>
+        <field name="priority">2</field>
+        <field name="technician_id" ref="user_technician_nimal"/>
+        <field name="request_date" eval="(DateTime.today() - relativedelta(months=1)).strftime('%Y-%m-%d')"/>
+        <field name="description"><![CDATA[<p>500-hour service.</p>]]></field>
+    </record>
+    <function model="equipment.maintenance.request" name="action_start"
+              eval="[[ref('request_generator_completed')]]"/>
+    <record id="activity_generator_1" model="equipment.maintenance.activity">
+        <field name="request_id" ref="request_generator_completed"/>
+        <field name="name">Oil and filter change, load test</field>
+        <field name="technician_id" ref="user_technician_nimal"/>
+        <field name="hours_spent">3</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(months=1)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="spare_generator_1" model="equipment.maintenance.spare.part">
+        <field name="request_id" ref="request_generator_completed"/>
+        <field name="product_id" ref="product_oil_filter"/>
+        <field name="quantity">2</field>
+    </record>
+    <function model="equipment.maintenance.request" name="action_complete"
+              eval="[[ref('request_generator_completed')]]"/>
+
+    <!-- 6. Completed (Server) -->
+    <record id="request_server_completed" model="equipment.maintenance.request">
+        <field name="tag_ids" eval="[Command.set([ref('tag_electrical')])]"/>
+        <field name="equipment_id" ref="equipment_server"/>
+        <field name="request_type">corrective</field>
+        <field name="priority">3</field>
+        <field name="technician_id" ref="user_technician_kasun"/>
+        <field name="request_date" eval="(DateTime.today() - relativedelta(days=20)).strftime('%Y-%m-%d')"/>
+        <field name="description"><![CDATA[<p>Disk failure alert on RAID array.</p>]]></field>
+    </record>
+    <function model="equipment.maintenance.request" name="action_start"
+              eval="[[ref('request_server_completed')]]"/>
+    <record id="activity_server_1" model="equipment.maintenance.activity">
+        <field name="request_id" ref="request_server_completed"/>
+        <field name="name">Replace failed disk and rebuild RAID</field>
+        <field name="technician_id" ref="user_technician_kasun"/>
+        <field name="hours_spent">2.5</field>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=20)).strftime('%Y-%m-%d')"/>
+    </record>
+    <record id="spare_server_1" model="equipment.maintenance.spare.part">
+        <field name="request_id" ref="request_server_completed"/>
+        <field name="product_id" ref="product_ssd"/>
+        <field name="quantity">1</field>
+    </record>
+    <function model="equipment.maintenance.request" name="action_complete"
+              eval="[[ref('request_server_completed')]]"/>
+
+    <!-- 7. Cancelled -->
+    <record id="request_hvac_cancelled" model="equipment.maintenance.request">
+        <field name="equipment_id" ref="equipment_hvac"/>
+        <field name="request_type">calibration</field>
+        <field name="priority">0</field>
+        <field name="request_date" eval="(DateTime.today() - relativedelta(days=15)).strftime('%Y-%m-%d')"/>
+        <field name="cancel_reason">Duplicate of the preventive maintenance request.</field>
+    </record>
+    <function model="equipment.maintenance.request" name="action_cancel"
+              eval="[[ref('request_hvac_cancelled')]]"/>
+
+    <!-- 8. Assigned to Nimal, scheduled next week -->
+    <record id="request_cnc_assigned" model="equipment.maintenance.request">
+        <field name="equipment_id" ref="equipment_cnc_lathe"/>
+        <field name="request_type">calibration</field>
+        <field name="priority">1</field>
+        <field name="technician_id" ref="user_technician_nimal"/>
+        <field name="request_date" eval="DateTime.today().strftime('%Y-%m-%d')"/>
+        <field name="scheduled_date" eval="(DateTime.today() + relativedelta(days=7)).strftime('%Y-%m-%d')"/>
+        <field name="description"><![CDATA[<p>Annual axis calibration.</p>]]></field>
+    </record>
+</odoo>
