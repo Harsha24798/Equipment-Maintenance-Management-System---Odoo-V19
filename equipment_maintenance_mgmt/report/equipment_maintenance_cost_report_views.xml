@@ -5,7 +5,7 @@
         <field name="name">equipment.maintenance.cost.report.view.pivot</field>
         <field name="model">equipment.maintenance.cost.report</field>
         <field name="arch" type="xml">
-            <pivot string="Maintenance Cost Analysis" sample="1" disable_linking="0">
+            <pivot string="Maintenance Cost Analysis" sample="1">
                 <field name="category_id" type="row"/>
                 <field name="request_date" interval="month" type="col"/>
                 <field name="labour_cost" type="measure"/>
