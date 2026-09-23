@@ -1,6 +1,8 @@
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
+# --- Selection values: (technical value stored in DB, label shown to the user) ---
+# Also imported by the cost report model (report/equipment_maintenance_cost_report.py)
 REQUEST_STATES = [
     ('new', 'New'),
     ('assigned', 'Assigned'),
@@ -16,6 +18,7 @@ REQUEST_TYPES = [
     ('calibration', 'Calibration'),
 ]
 
+# Values '0'..'3' are displayed as stars by widget="priority"
 PRIORITIES = [
     ('0', 'Low'),
     ('1', 'Normal'),
@@ -34,33 +37,45 @@ ALLOWED_TRANSITIONS = {
     'new': ('cancelled',),
 }
 
+# XML ID of the activity type created for the technician (data/mail_activity_type_data.xml)
 TODO_ACTIVITY_XMLID = 'equipment_maintenance_mgmt.mail_activity_data_maintenance_todo'
 
 
 class EquipmentMaintenanceRequest(models.Model):
+    """Maintenance request: one maintenance job on one equipment, from the
+    report of the problem until completion, with its labour and spare parts."""
     _name = 'equipment.maintenance.request'
     _description = 'Maintenance Request'
+    # mail.thread: chatter + tracking; mail.activity.mixin: to-dos for the technician
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    # Most urgent first, then most recent
     _order = 'priority desc, request_date desc, id desc'
     _check_company_auto = True
 
+    # --- Default methods ------------------------------------------------------
     def _default_technician_domain(self):
         """Only internal users of the Technician group (or Manager, which
         implies it) can be assigned to a request."""
         group = self.env.ref(
             'equipment_maintenance_mgmt.equipment_maintenance_mgmt_group_technician',
             raise_if_not_found=False)
+        # share=False: internal users only (no portal / public users)
         domain = [('share', '=', False)]
         if group:
+            # all_group_ids (Odoo 19): groups of the user INCLUDING implied groups
             domain.append(('all_group_ids', 'in', group.ids))
         return domain
 
+    # --- Fields (requirement: maintenance request) ----------------------------
+    # Request Number: default 'New', replaced by the sequence in create()
+    # index='trigram': PostgreSQL trigram index for fast 'ilike' searches
     name = fields.Char(
         string='Request Number', required=True, readonly=True, copy=False,
         index='trigram', default=lambda self: self.env._('New'))
     equipment_id = fields.Many2one(
         'equipment.maintenance.equipment', string='Equipment', required=True,
         tracking=True, ondelete='restrict', check_company=True, index=True)
+    # default=fields.Date.context_today: today's date when the record is created
     request_date = fields.Date(
         string='Request Date', required=True, tracking=True,
         default=fields.Date.context_today)
@@ -69,14 +84,18 @@ class EquipmentMaintenanceRequest(models.Model):
         REQUEST_TYPES, string='Request Type', required=True,
         default='corrective', tracking=True)
     description = fields.Html(string='Description')
+    # domain given by a lambda: evaluated at runtime (needs the group's database id)
     technician_id = fields.Many2one(
         'res.users', string='Assigned Technician', tracking=True, index=True,
         domain=lambda self: self._default_technician_domain())
+    # Many2many: relation table equipment_maintenance_request_tag_rel(request_id, tag_id)
     tag_ids = fields.Many2many(
         'equipment.maintenance.tag', 'equipment_maintenance_request_tag_rel',
         'request_id', 'tag_id', string='Tags')
     priority = fields.Selection(
         PRIORITIES, string='Priority', default='1', required=True, tracking=True)
+    # readonly=True: the status only changes through the workflow buttons
+    # group_expand=True: the kanban shows a column for every status, even empty ones
     state = fields.Selection(
         REQUEST_STATES, string='Status', required=True, default='new',
         readonly=True, copy=False, tracking=True, index=True, group_expand=True)
@@ -91,6 +110,7 @@ class EquipmentMaintenanceRequest(models.Model):
         related='equipment_id.location_id', store=True, string='Location')
     employee_id = fields.Many2one(
         related='equipment_id.employee_id', string='Responsible Employee')
+    # Set by action_start() / action_complete()
     date_start = fields.Datetime(string='Started On', readonly=True, copy=False)
     date_done = fields.Datetime(string='Completed On', readonly=True, copy=False)
     duration = fields.Float(
@@ -98,6 +118,7 @@ class EquipmentMaintenanceRequest(models.Model):
         help="Elapsed time between the start and the completion of the request.")
     cancel_reason = fields.Text(string='Cancellation Reason', copy=False, tracking=True)
     resolution_note = fields.Html(string='Resolution Notes', copy=False)
+    # Computed + search method: usable in the "Overdue" filter although not stored
     is_overdue = fields.Boolean(
         string='Overdue', compute='_compute_is_overdue', search='_search_is_overdue')
     # NOTE: named work_activity_ids to avoid a clash with activity_ids of mail.activity.mixin
@@ -107,6 +128,9 @@ class EquipmentMaintenanceRequest(models.Model):
     spare_part_ids = fields.One2many(
         'equipment.maintenance.spare.part', 'request_id', string='Spare Parts',
         copy=False)
+    # Cost fields (requirement: cost calculation), all filled by _compute_costs.
+    # store=True -> summable in lists, groupable in pivots, readable by the SQL report;
+    # aggregator='sum' (Odoo 19 name of group_operator) -> total shown when grouping
     total_hours = fields.Float(
         string='Total Hours', compute='_compute_costs', store=True)
     labour_cost = fields.Monetary(
@@ -119,6 +143,7 @@ class EquipmentMaintenanceRequest(models.Model):
         string='Total Maintenance Cost', currency_field='currency_id',
         compute='_compute_costs', store=True, aggregator='sum', tracking=True)
 
+    # --- Compute / search methods (same order as the fields) ------------------
     @api.depends('date_start', 'date_done')
     def _compute_duration(self):
         for request in self:
@@ -133,12 +158,16 @@ class EquipmentMaintenanceRequest(models.Model):
         today = fields.Date.context_today(self)
         open_states = self._get_open_states()
         for request in self:
+            # Overdue = scheduled in the past and still not completed / cancelled
             request.is_overdue = bool(
                 request.scheduled_date
                 and request.scheduled_date < today
                 and request.state in open_states)
 
     def _search_is_overdue(self, operator, value):
+        # Called by the ORM when searching on is_overdue; must return a domain.
+        # Odoo 19 always passes 'in' / 'not in'; NotImplemented lets the ORM
+        # build 'not in' by negating our 'in' domain.
         if operator != 'in':
             return NotImplemented
         today = fields.Date.context_today(self)
@@ -146,8 +175,10 @@ class EquipmentMaintenanceRequest(models.Model):
             ('scheduled_date', '<', today),
             ('state', 'in', self._get_open_states()),
         ]
+        # Prefix notation: '!' = NOT, '&' = AND of the two next conditions
         return overdue_domain if True in value else ['!', '&', *overdue_domain]
 
+    # Dotted dependencies: recompute when a line is added, changed or deleted
     @api.depends('work_activity_ids.hours_spent', 'work_activity_ids.cost',
                  'spare_part_ids.total_cost')
     def _compute_costs(self):
@@ -159,6 +190,9 @@ class EquipmentMaintenanceRequest(models.Model):
             request.spare_part_cost = sum(request.spare_part_ids.mapped('total_cost'))
             request.total_cost = request.labour_cost + request.spare_part_cost
 
+    # --- Constraints and onchange ---------------------------------------------
+    # @api.constrains: checked after every create()/write() touching these fields;
+    # raising ValidationError cancels the whole operation
     @api.constrains('request_date', 'scheduled_date')
     def _check_scheduled_date(self):
         for request in self:
@@ -171,6 +205,7 @@ class EquipmentMaintenanceRequest(models.Model):
     @api.constrains('equipment_id')
     def _check_equipment_id(self):
         for request in self:
+            # Archived (active=False) equipment is out of service: no new work on it
             if not request.equipment_id.active:
                 raise ValidationError(self.env._(
                     "You cannot create a maintenance request for the archived "
@@ -187,6 +222,7 @@ class EquipmentMaintenanceRequest(models.Model):
                     "Request %(name)s must have an assigned technician in state '%(state)s'.",
                     name=request.name, state=dict(REQUEST_STATES)[request.state]))
 
+    # @api.onchange: runs in the form (before saving) when the user changes the field
     @api.onchange('equipment_id')
     def _onchange_equipment_id(self):
         """Warn the user (without blocking) when the selected equipment already
@@ -194,6 +230,7 @@ class EquipmentMaintenanceRequest(models.Model):
         under warranty, so a supplier warranty claim can be considered."""
         if not self.equipment_id:
             return None
+        # _origin: the saved record behind the form (id is False for a new record)
         open_requests = self.search([
             ('equipment_id', '=', self.equipment_id.id),
             ('state', 'in', self._get_open_states()),
@@ -210,28 +247,35 @@ class EquipmentMaintenanceRequest(models.Model):
                 "warranty claim with the supplier.",
                 date=self.equipment_id.warranty_expiry_date))
         if messages:
+            # Returning {'warning': {...}} shows a non-blocking popup in the form
             return {'warning': {
                 'title': self.env._('Please check'),
                 'message': '\n\n'.join(messages),
             }}
         return None
 
+    # --- CRUD overrides --------------------------------------------------------
+    # @api.model_create_multi: create() receives a LIST of value dicts (batch creation)
     @api.model_create_multi
     def create(self, vals_list):
         default_name = self.env._('New')
         for vals in vals_list:
             if vals.get('name', default_name) == default_name:
                 company_id = vals.get('company_id') or self.env.company.id
+                # next_by_code(): next number of the ir.sequence (MR/2026/00001);
+                # taken here, not as a default, so no number is lost on discarded forms
                 vals['name'] = self.env['ir.sequence'].with_company(company_id).next_by_code(
                     'equipment.maintenance.request') or default_name
             # A request created with a technician is directly assigned
             if vals.get('technician_id') and vals.get('state', 'new') == 'new':
                 vals['state'] = 'assigned'
+        # super(): call the standard create() which inserts the records
         requests = super().create(vals_list)
         requests.filtered(lambda r: r.state == 'assigned')._schedule_technician_todo()
         return requests
 
     def write(self, vals):
+        # vals: dict of the fields being modified on all records of self
         # Setting a technician on a new request moves it to "Assigned"
         requests_to_assign = self.env['equipment.maintenance.request']
         if vals.get('technician_id') and 'state' not in vals:
@@ -243,20 +287,26 @@ class EquipmentMaintenanceRequest(models.Model):
         res = super().write(vals)
         if requests_to_assign:
             requests_to_assign.write({'state': 'assigned'})
+        # New technician -> replace the to-do (old technician's to-do is removed)
         technician_changed.filtered(
             lambda r: r.state in ('assigned', 'in_progress'))._schedule_technician_todo()
         return res
 
+    # @api.ondelete: check executed by unlink() before deleting (recommended instead
+    # of overriding unlink); at_uninstall=False skips it when the module is uninstalled
     @api.ondelete(at_uninstall=False)
     def _unlink_except_processed(self):
         for request in self:
             if request.state not in ('new', 'cancelled'):
+                # UserError: business error shown to the user, operation cancelled
                 raise UserError(self.env._(
                     "Only new or cancelled maintenance requests can be deleted "
                     "(%(name)s is '%(state)s'). Cancel it first.",
                     name=request.name, state=dict(REQUEST_STATES)[request.state]))
 
+    # --- Action methods (header buttons: <button name="action_..." type="object">) ---
     def action_assign(self):
+        """Button "Assign": New -> Assigned (technician required)."""
         self._check_state_transition('assigned')
         for request in self:
             if not request.technician_id:
@@ -268,12 +318,15 @@ class EquipmentMaintenanceRequest(models.Model):
         return True
 
     def action_start(self):
+        """Button "Start": Assigned -> In Progress (only the assigned technician / a manager)."""
         self._check_state_transition('in_progress')
         self._check_is_assigned_technician()
+        # fields.Datetime.now(): current date and time (UTC)
         self.write({'state': 'in_progress', 'date_start': fields.Datetime.now()})
         return True
 
     def action_complete(self):
+        """Button "Complete": In Progress -> Completed (at least one activity required)."""
         self._check_state_transition('completed')
         self._check_is_assigned_technician()
         for request in self:
@@ -287,12 +340,15 @@ class EquipmentMaintenanceRequest(models.Model):
         return True
 
     def action_cancel(self):
+        """Button "Cancel": New / Assigned / In Progress -> Cancelled."""
         self._check_state_transition('cancelled')
         self.write({'state': 'cancelled'})
+        # The technician's to-do is no longer needed
         self.activity_unlink([TODO_ACTIVITY_XMLID])
         return True
 
     def action_reset_to_new(self):
+        """Button "Reset to New": Cancelled -> New, clears technician and dates."""
         self._check_state_transition('new')
         self.write({
             'state': 'new',
@@ -304,10 +360,12 @@ class EquipmentMaintenanceRequest(models.Model):
         return True
 
     def action_print_request(self):
+        """Button "Print": the work order QWeb PDF."""
         return self.env.ref(
             'equipment_maintenance_mgmt.equipment_maintenance_request_action_report',
         ).report_action(self)
 
+    # --- Business / helper methods ----------------------------------------------
     @api.model
     def _get_open_states(self):
         """States in which a request is still pending (used by reports,
@@ -329,6 +387,7 @@ class EquipmentMaintenanceRequest(models.Model):
         """Only the assigned technician may start / complete the job: a user
         cannot perform (and close) work assigned to someone else, e.g. a
         request they reported themselves. Managers may act on any request."""
+        # has_group(xmlid): True if the current user belongs to the group (or implies it)
         if self.env.user.has_group('equipment_maintenance_mgmt.equipment_maintenance_mgmt_group_manager'):
             return
         for request in self:
@@ -343,6 +402,7 @@ class EquipmentMaintenanceRequest(models.Model):
         replacing any previous one (e.g. after a technician change)."""
         if not self.env.ref(TODO_ACTIVITY_XMLID, raise_if_not_found=False):
             return
+        # filtered('technician_id'): keep only requests that have a technician
         for request in self.filtered('technician_id'):
             request.activity_unlink([TODO_ACTIVITY_XMLID])
             request.activity_schedule(
@@ -352,6 +412,7 @@ class EquipmentMaintenanceRequest(models.Model):
                 summary=self.env._('Maintenance of %s', request.equipment_id.display_name),
             )
 
+    # Called daily by the scheduled action ir_cron_overdue_requests (data/ir_cron_data.xml)
     @api.model
     def _cron_overdue_requests(self):
         """Post a reminder on overdue requests, notifying the technician. Runs daily."""
@@ -360,6 +421,7 @@ class EquipmentMaintenanceRequest(models.Model):
             ('technician_id', '!=', False),
         ])
         for request in overdue_requests:
+            # message_post(): add a message in the chatter; partner_ids are notified
             request.message_post(
                 body=self.env._(
                     'This maintenance request is overdue (scheduled on %s).',

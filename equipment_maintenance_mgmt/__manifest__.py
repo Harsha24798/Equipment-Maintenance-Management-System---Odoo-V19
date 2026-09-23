@@ -1,6 +1,10 @@
+# __manifest__.py: module description read by Odoo (Apps list, install order,
+# data files). The file contains a single Python dict.
 {
     'name': 'Equipment Maintenance Management',
+    # <Odoo series>.<major>.<minor>.<patch>
     'version': '19.0.1.0.0',
+    # App category shown in the Apps menu (Parent/Child)
     'category': 'Services/Maintenance',
     'summary': 'Equipment register, maintenance requests, technician activities, '
                'spare parts consumption and maintenance cost analysis',
@@ -21,7 +25,12 @@ Manage the complete maintenance life cycle of company equipment:
     'author': 'Harsha Madushan',
     'maintainer': 'Harsha Madushan',
     'license': 'LGPL-3',
+    # Modules installed before this one; their models and XML IDs can be used here
+    #   mail: chatter/activities, hr: employees, hr_hourly_cost: employee hourly cost,
+    #   product: spare parts
     'depends': ['base', 'mail', 'hr', 'hr_hourly_cost', 'product'],
+    # Data files loaded at install/upgrade, IN THIS ORDER (a file can only
+    # reference XML IDs defined in files loaded before it)
     'data': [
         # security first: groups are referenced by access rights, views and menus
         'security/equipment_maintenance_mgmt_groups.xml',
@@ -52,10 +61,12 @@ Manage the complete maintenance life cycle of company equipment:
         # menus last: they reference the actions defined above
         'views/equipment_maintenance_mgmt_menus.xml',
     ],
+    # Loaded only in databases created with demo data
     'demo': [
         'demo/equipment_maintenance_demo.xml',
     ],
     'images': ['static/description/banner.png'],
     'installable': True,
+    # application=True: shown as an App with its own icon on the home screen
     'application': True,
 }

@@ -14,10 +14,12 @@ class EquipmentMaintenanceCostReport(models.Model):
     graph views of the "Maintenance Cost Analysis" report."""
     _name = 'equipment.maintenance.cost.report'
     _description = 'Maintenance Cost Analysis'
+    # _auto = False: the ORM does not create a table; rows come from _table_query
     _auto = False
     _rec_name = 'request_id'
     _order = 'request_date desc'
 
+    # Dimensions (group by) - every field is readonly because the model is a SQL view
     request_id = fields.Many2one('equipment.maintenance.request', string='Request', readonly=True)
     equipment_id = fields.Many2one('equipment.maintenance.equipment', string='Equipment', readonly=True)
     category_id = fields.Many2one('equipment.maintenance.category', string='Category', readonly=True)
@@ -31,12 +33,17 @@ class EquipmentMaintenanceCostReport(models.Model):
     state = fields.Selection(REQUEST_STATES, string='Status', readonly=True)
     request_date = fields.Date(string='Request Date', readonly=True)
     date_done = fields.Datetime(string='Completed On', readonly=True)
+    # Measures (summed in pivot / graph thanks to aggregator='sum')
     request_count = fields.Integer(string='# Requests', readonly=True, aggregator='sum')
     total_hours = fields.Float(string='Hours Spent', readonly=True, aggregator='sum')
     labour_cost = fields.Monetary(string='Labour Cost', readonly=True, aggregator='sum')
     spare_part_cost = fields.Monetary(string='Spare Part Cost', readonly=True, aggregator='sum')
     total_cost = fields.Monetary(string='Total Cost', readonly=True, aggregator='sum')
 
+    # _table_query (Odoo 19): the SQL SELECT that provides the rows of this model.
+    # One row per maintenance request, joined with its equipment (category,
+    # location, responsible) and company (currency). id must be unique.
+    # SQL(...) wraps the query so Odoo can compose it safely.
     @property
     def _table_query(self):
         return SQL("""

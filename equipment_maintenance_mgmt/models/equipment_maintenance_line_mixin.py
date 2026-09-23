@@ -9,28 +9,35 @@ class EquipmentMaintenanceLineMixin(models.AbstractModel):
     """Common behaviour of maintenance request lines (activities and spare
     parts): link to the request, company/currency propagation and locking of
     the lines once the request is completed or cancelled."""
+    # AbstractModel: no database table; its fields and methods are copied into
+    # every model that inherits it (_inherit = ['equipment.maintenance.line.mixin'])
     _name = 'equipment.maintenance.line.mixin'
     _description = 'Maintenance Request Line Mixin'
 
+    # ondelete='cascade': deleting the request deletes its lines
     request_id = fields.Many2one(
         'equipment.maintenance.request', string='Maintenance Request',
         required=True, index=True, ondelete='cascade')
     request_state = fields.Selection(related='request_id.state', string='Request Status')
+    # Stored related fields: allow grouping lines by equipment and multi-company rules
     equipment_id = fields.Many2one(
         related='request_id.equipment_id', store=True, string='Equipment')
     company_id = fields.Many2one(
         related='request_id.company_id', store=True, string='Company', index=True)
     currency_id = fields.Many2one(related='request_id.currency_id', string='Currency')
 
+    # --- CRUD: every way of changing a line checks that the request is still open ---
     @api.model_create_multi
     def create(self, vals_list):
         request_ids = {vals['request_id'] for vals in vals_list if vals.get('request_id')}
+        # browse(ids): get the records of these ids without querying the database yet
         self._check_request_editable(
             self.env['equipment.maintenance.request'].browse(request_ids))
         return super().create(vals_list)
 
     def write(self, vals):
         self._check_request_editable(self.request_id)
+        # Also refuse moving a line to another (closed) request
         if vals.get('request_id'):
             self._check_request_editable(
                 self.env['equipment.maintenance.request'].browse(vals['request_id']))
