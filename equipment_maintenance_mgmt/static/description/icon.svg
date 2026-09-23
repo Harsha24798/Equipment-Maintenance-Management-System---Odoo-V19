@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#1AB0A5"/>
+      <stop offset="1" stop-color="#0B5E7A"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="22" fill="url(#g)"/>
+  <path fill="#fff" fill-rule="evenodd" d="M101.50 64.00 L101.04 69.87 L93.10 73.46 L91.26 77.89 L94.34 86.04 L90.52 90.52 L81.99 88.76 L77.89 91.26 L75.59 99.66 L69.87 101.04 L64.00 94.60 L59.21 94.22 L52.41 99.66 L46.98 97.41 L46.01 88.76 L42.36 85.64 L33.66 86.04 L30.59 81.02 L34.90 73.46 L33.78 68.79 L26.50 64.00 L26.96 58.13 L34.90 54.54 L36.74 50.11 L33.66 41.96 L37.48 37.48 L46.01 39.24 L50.11 36.74 L52.41 28.34 L58.13 26.96 L64.00 33.40 L68.79 33.78 L75.59 28.34 L81.02 30.59 L81.99 39.24 L85.64 42.36 L94.34 41.96 L97.41 46.98 L93.10 54.54 L94.22 59.21Z M64 49a15 15 0 1 0 0.01 0Z"/>
+  <g transform="rotate(45 64 64)" fill="#FFB32E">
+    <rect x="56.3" y="22.8" width="15.4" height="80" rx="7.7"/>
+    <path d="M64 8a15 15 0 1 0 0.01 0Z M58 6h12v19h-12Z" fill-rule="evenodd"/>
+  </g>
+</svg>
